@@ -49,7 +49,7 @@ def convert_folder_pics(folder_name):
             crop = orig_image[:, w_offset:im_height + w_offset, :]
             resized = imresize(crop, output_sz)
 
-            res_name = "{}/{}/{}__{}.png".format(output_folder, folder_name, i, name)
+            res_name = "{}/{}/{}__{}.jpg".format(output_folder, folder_name, i, name)
             imsave(res_name, resized)
 
 
