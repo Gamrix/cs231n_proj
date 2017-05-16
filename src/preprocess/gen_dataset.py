@@ -18,10 +18,10 @@ output_folder = "./prep_res"
 
 def convert_folder_pics(folder_name):
     src_p = input_folder + "/" + folder_name
-    files = list(sorted(os.listdir(src_p)))
+    all_files = list(sorted(os.listdir(src_p)))
     # just hardcode the file names for now
 
-    num_samples = len(files) // 2
+    num_samples = len(all_files) // 2
 
     full_out_folder = output_folder + "/" + folder_name
     if not os.path.exists(full_out_folder):
@@ -32,7 +32,7 @@ def convert_folder_pics(folder_name):
             print("Making image:", i)
 
         # choosing files to convert
-        start_num = random.randrange(len(files))
+        start_num = random.randrange(len(all_files))
         interval = random.randrange(3, 7)
         files = ["{:010d}.png".format(n + start_num) for n in (0, interval, 2 * interval)]
         src_f = [src_p + "/" + f for f in files]
@@ -42,7 +42,7 @@ def convert_folder_pics(folder_name):
         # choose an image offset
         w_offset = random.randint(0, 1392 - 512)
 
-        for f, name in zip(files, ("src_0", "ground_t", "src_1")):
+        for f, name in zip(files, ("src_0", "src_1_gt", "src_2")):
             orig_image = imread(src_p + "/" + f)
 
             im_height = orig_image.shape[0]
