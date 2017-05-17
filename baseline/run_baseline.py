@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 import glob
 import os
 from scipy.misc import imread, imsave
@@ -28,7 +30,9 @@ DROPOUT = 0.15
 INIT_LR = 2e-3
 
 if os.path.exists("../john_local_flag.txt"):
+    # this is because my local machine can't handle the batch size...
     BATCH_SIZE = 4
+    NUM_EPOCHS = 1
 
 class ChunkSampler(sampler.Sampler):
     """Samples elements sequentially from some offset. 
@@ -115,7 +119,7 @@ def eval(model, dev_data, loss_fn):
         
         total_loss += loss_fn(scores, y_var).data[0]
 
-    print ("Total eval loss: %.4f, Avg eval loss: %.4f" % (total_loss, total_loss / NUM_VAL))
+    print("Total eval loss: %.4f, Avg eval loss: %.4f" % (total_loss, total_loss / NUM_VAL))
 
 
 def run_model(train_data, val_data, test_data):

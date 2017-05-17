@@ -8,4 +8,5 @@ def normalize(image):
     return image.float() / norm_factor - 1
 
 def denorm(norm_img):
-    return ((norm_img + 1) * norm_factor).astype("uint8")
+    normed_data = (norm_img + 1) * norm_factor
+    return np.clip(normed_data, 0, 255).astype("uint8")
