@@ -15,6 +15,8 @@ import torchvision.transforms as T
 
 import numpy as np
 
+from normalizer import normalize, denorm
+
 NUM_TRAIN = 192
 NUM_VAL = 16
 BATCH_SIZE = 16
@@ -24,6 +26,9 @@ PRINT_EVERY = 1
 NUM_EPOCHS = 3
 DROPOUT = 0.15
 INIT_LR = 2e-3
+
+if os.path.exists("../john_local_flag.txt"):
+    BATCH_SIZE = 4
 
 class ChunkSampler(sampler.Sampler):
     """Samples elements sequentially from some offset. 
@@ -48,7 +53,7 @@ def load_dataset():
         src_p = DATA_DIR + "/" + dir
         if not os.path.isdir(src_p):
             continue
-        src_f = sorted(glob.glob(src_p + "/*.png"))
+        src_f = sorted(glob.glob(src_p + "/*.jpg"))
 
         if not all(os.path.exists(f) for f in src_f): continue
 
@@ -61,13 +66,14 @@ def load_dataset():
             ground_truths.append(t)
             inputs.append(np.concatenate((z,o), axis=2))
 
-        inputs, ground_truths = np.array(inputs), np.array(ground_truths)
-        return inputs, ground_truths
+    inputs, ground_truths = np.array(inputs), np.array(ground_truths)
+    return inputs, ground_truths
 
 def make_loaders(inputs, gold):
     inputs_t = torch.from_numpy(inputs).byte()
     gold_t = torch.from_numpy(gold).byte()
     dataset = TensorDataset(inputs_t, gold_t)
+
     train = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_TRAIN, 0))
     val = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_VAL, NUM_TRAIN))
     test = None # For now
@@ -79,8 +85,8 @@ def train(model, loss_fn, optimizer, train_data, num_epochs = 1):
         print('Starting epoch %d / %d...' % (epoch + 1, num_epochs))
         model.train()
         for t, (x, y) in enumerate(train_data):
-            x_var = Variable(x.float().permute(0,3,1,2))
-            y_var = Variable(y.float().permute(0,3,1,2))
+            x_var = Variable(normalize(x).permute(0,3,1,2))
+            y_var = Variable(normalize(y).permute(0,3,1,2))
 
             scores = model(x_var)
             
@@ -93,19 +99,19 @@ def train(model, loss_fn, optimizer, train_data, num_epochs = 1):
             optimizer.step()
 
 def eval(model, dev_data, loss_fn):
-    print ("Running evaluation...")
+    print("Running evaluation...")
     total_loss = 0.0
     model.eval()
     for t, (x, y) in enumerate(dev_data):
-        x_var = Variable(x.float().permute(0,3,1,2))
-        y_var = Variable(y.float().permute(0,3,1,2))
+        x_var = Variable(normalize(x).permute(0,3,1,2))
+        y_var = Variable(normalize(y).permute(0,3,1,2))
         
         scores = model(x_var)
-        print (scores.size())
+        print(scores.size())
         for i in range(scores.size()[0]):
             name = "./eval/{}_{}_".format(t, i)
-            imsave(name + "gen.png", np.transpose(scores[i].data.numpy(), axes=[1,2,0]))
-            imsave(name + "gold.png", np.transpose(y_var[i].data.numpy(), axes=[1,2,0]))
+            imsave(name + "gen.png", np.transpose(denorm(scores[i].data.numpy()), axes=[1,2,0]))
+            imsave(name + "gold.png", np.transpose(denorm(y_var[i].data.numpy()), axes=[1,2,0]))
         
         total_loss += loss_fn(scores, y_var).data[0]
 
@@ -132,10 +138,10 @@ def run_model(train_data, val_data, test_data):
         nn.Dropout2d(p=DROPOUT),
         # Conv 5
         nn.Conv2d(16, 3, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 3 * 224 * 224
-        nn.ReLU(inplace=True),
+        # nn.ReLU(inplace=True),
     )
     
-    loss_fn = nn.L1Loss() # TODO: L2 loss
+    loss_fn = nn.L1Loss()  # TODO: L2 loss
     optimizer = optim.Adam(model_base.parameters(), lr=INIT_LR)
 
     train(model_base, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
