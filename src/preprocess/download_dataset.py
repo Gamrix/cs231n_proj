@@ -4,9 +4,10 @@ import os
 import shutil
 from urllib.request import urlretrieve
 import zipfile
-from multiprocessing import pool
+from multiprocessing import pool, Semaphore
 import logging
 import glob
+import itertools
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d %I:%M:%S', level=logging.INFO)
 
@@ -17,8 +18,12 @@ def download_data():
     os.makedirs(dst + "/zips", exist_ok=True)  # yeah, shouldn't be using this...
     os.chdir(dst)
 
-    with pool.Pool(8) as p:
-        p.map(download_data, files.split())
+    # limit concurrent writters to external disk
+    # disk_sema = Semaphore(2)
+
+    with pool.Pool(6) as p:
+        # p.map(download_file, zip(files.split(), itertools.repeat(disk_sema)))
+        p.map(download_file, files.split())
 
 
 def download_file(file):
@@ -30,18 +35,20 @@ def download_file(file):
             longname = file
         else:
             shortname = file + "_sync.zip"
-            longname= file + "/" + shortname
-        logging.info("Downloading " + shortname)
+            longname = file + "/" + shortname
 
         out_folder = shortname[:-4]
         if not os.path.exists("zips/" + shortname):
+            logging.info("Downloading " + shortname)
             urlretrieve(src + longname, "zips/" + shortname)
 
         os.makedirs(out_folder, exist_ok=True)  # yeah, shouldn't be using this...
 
+        if os.path.exists(out_folder+ "/finished.txt"): return
+
         zip_dest = "./{}/extract".format(out_folder)
         with zipfile.ZipFile("zips/" + shortname, 'r') as zip:
-            logging.info("Extracting Files")
+            logging.info("Extracting Files for " + shortname)
             all_files = zip.namelist()
             image_files = [f for f in all_files if "image_02" in f]
 
@@ -54,9 +61,14 @@ def download_file(file):
 
         # remove the extracted stuff
         shutil.rmtree(zip_dest)
+
+        with open(out_folder + "/finished.txt", "w") as f:
+            f.write("Done")
+
     except Exception as e:
         import traceback
-        logging.error(traceback.format_exc())
+
+        logging.error("Failure with {}\n".format(file) + traceback.format_exc())
 
 
 files = """
