@@ -13,8 +13,19 @@ Put folders inside of ./dataset/ to process
 
 
 output_sz = (224, 224)
-input_folder = "./dataset"
-output_folder = "./prep_res"
+# input_folder = "./dataset"
+# output_folder = "./prep_res"
+input_folder = "J:/kitti/dataset"
+output_folder = "J:/kitti/prep_res"
+
+
+frame_interval = 3, 7
+simple = True
+
+if simple:
+    output_folder = output_folder + "/simple"
+    frame_interval = (1,2)
+
 
 def convert_folder_pics(folder_name):
     src_p = input_folder + "/" + folder_name
@@ -24,8 +35,7 @@ def convert_folder_pics(folder_name):
     num_samples = len(all_files) // 2
 
     full_out_folder = output_folder + "/" + folder_name
-    if not os.path.exists(full_out_folder):
-        os.mkdir(full_out_folder)
+    os.makedirs(full_out_folder, exist_ok=True)
 
     for i in range(num_samples):
         if i % 10 == 0:
@@ -33,10 +43,9 @@ def convert_folder_pics(folder_name):
 
         # choosing files to convert
         start_num = random.randrange(len(all_files))
-        interval = random.randrange(3, 7)
+        interval = random.randrange(*frame_interval)
         files = ["{:010d}.png".format(n + start_num) for n in (0, interval, 2 * interval)]
         src_f = [src_p + "/" + f for f in files]
-
         if not all(os.path.exists(f) for f in src_f): continue
 
         # choose an image offset

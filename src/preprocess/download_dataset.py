@@ -47,13 +47,18 @@ def download_file(file):
         if os.path.exists(out_folder+ "/finished.txt"): return
 
         zip_dest = "./{}/extract".format(out_folder)
-        with zipfile.ZipFile("zips/" + shortname, 'r') as zip:
-            logging.info("Extracting Files for " + shortname)
-            all_files = zip.namelist()
-            image_files = [f for f in all_files if "image_02" in f]
+        try:
+            with zipfile.ZipFile("zips/" + shortname, 'r') as zip:
+                logging.info("Extracting Files for " + shortname)
+                all_files = zip.namelist()
+                image_files = [f for f in all_files if "image_02" in f]
 
-            for f in image_files:
-                zip.extract(f, path=zip_dest)
+                for f in image_files:
+                    zip.extract(f, path=zip_dest)
+        except zipfile.BadZipFile as e:
+            logging.warning("Deleting bad zip file " + shortname)
+            os.remove("zips/" + shortname)
+            return
 
         # now move all the files over
         for pic in glob.iglob(zip_dest + "/**/*.png", recursive=True):
