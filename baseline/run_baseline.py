@@ -142,6 +142,10 @@ def eval(model, dev_data, loss_fn):
     print("Total eval loss: %.4f, Avg eval loss: %.4f" % (total_loss, total_loss / NUM_VAL))
 
 
+class L2Loss(torch.nn.Module):
+    def forward(self, y_pred, y_true):
+        return torch.mean((y_pred - y_true) **2)
+
 def run_model(train_data, val_data, test_data):
     model_base = nn.Sequential (
         # Conv 1
@@ -164,7 +168,7 @@ def run_model(train_data, val_data, test_data):
         nn.Conv2d(16, 3, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 3 * 224 * 224
     ).type(dtype)
     
-    loss_fn = nn.L1Loss()  # TODO: L2 loss
+    loss_fn = L2Loss()  # TODO: L2 loss
     optimizer = optim.Adam(model_base.parameters(), lr=INIT_LR)
 
     train(model_base, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
