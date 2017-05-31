@@ -19,15 +19,18 @@ import numpy as np
 
 from normalizer import normalize, denorm
 
-NUM_TRAIN = 192
-NUM_VAL = 16
-BATCH_SIZE = 16
+NUM_TRAIN = 32000
+NUM_VAL = 1600
+NUM_SAVED_SAMPLES = 16
+BATCH_SIZE = 64
 DATA_DIR = "../src/preprocess/prep_res"
 PRINT_EVERY = 1
 
 NUM_EPOCHS = 3
 DROPOUT = 0.15
-INIT_LR = 2e-3
+INIT_LR = 5e-4
+
+dtype=torch.cuda.FloatTensor
 
 if os.path.exists("../john_local_flag.txt"):
     # this is because my local machine can't handle the batch size...
@@ -53,7 +56,14 @@ class ChunkSampler(sampler.Sampler):
 def load_dataset():
     ground_truths = []
     inputs = []
-    for dir in os.listdir(DATA_DIR):
+    length = len(os.listdir(DATA_DIR))
+    if os.path.isfile('saved_in_data') and os.path.isfile('saved_ground_truths'):
+        print ("Reading cached numpy data in from file...")
+        inputs = np.fromfile('saved_in_data')
+        ground_truths = np.fromfile('saved_ground_truths')
+        return inputs, ground_truths
+    for i, dir in enumerate(os.listdir(DATA_DIR)):
+        print ("\tOn dir %d of %d" % (i, length))
         src_p = DATA_DIR + "/" + dir
         if not os.path.isdir(src_p):
             continue
@@ -71,6 +81,13 @@ def load_dataset():
             inputs.append(np.concatenate((z,o), axis=2))
 
     inputs, ground_truths = np.array(inputs), np.array(ground_truths)
+
+    print ("Caching numpy data for next run...")
+    with open('saved_in_data', 'w+') as f:
+        inputs.tofile(f)
+    with open('saved_ground_truths', 'w+') as f:
+        ground_truths.tofile(f)
+
     return inputs, ground_truths
 
 def make_loaders(inputs, gold):
@@ -89,8 +106,8 @@ def train(model, loss_fn, optimizer, train_data, num_epochs = 1):
         print('Starting epoch %d / %d...' % (epoch + 1, num_epochs))
         model.train()
         for t, (x, y) in enumerate(train_data):
-            x_var = Variable(normalize(x).permute(0,3,1,2))
-            y_var = Variable(normalize(y).permute(0,3,1,2))
+            x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
+            y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
 
             scores = model(x_var)
             
@@ -107,15 +124,18 @@ def eval(model, dev_data, loss_fn):
     total_loss = 0.0
     model.eval()
     for t, (x, y) in enumerate(dev_data):
-        x_var = Variable(normalize(x).permute(0,3,1,2))
-        y_var = Variable(normalize(y).permute(0,3,1,2))
+        x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
+        y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
         
         scores = model(x_var)
         print(scores.size())
-        for i in range(scores.size()[0]):
+        for i in range(NUM_SAVED_SAMPLES):
             name = "./eval/{}_{}_".format(t, i)
-            imsave(name + "gen.png", np.transpose(denorm(scores[i].data.numpy()), axes=[1,2,0]))
-            imsave(name + "gold.png", np.transpose(denorm(y_var[i].data.numpy()), axes=[1,2,0]))
+            imsave(name + "gen.png", np.transpose(denorm(scores[i].data.cpu().numpy()), axes=[1,2,0]))
+            imsave(name + "gold.png", np.transpose(denorm(y_var[i].data.cpu().numpy()), axes=[1,2,0]))
+            x = x_var[i].data.cpu().numpy()
+            imsave(name + "orig_0.png", x[:3,:,:])
+            imsave(name + "orig_1.png", x[3:,:,:])
         
         total_loss += loss_fn(scores, y_var).data[0]
 
@@ -142,8 +162,7 @@ def run_model(train_data, val_data, test_data):
         nn.Dropout2d(p=DROPOUT),
         # Conv 5
         nn.Conv2d(16, 3, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 3 * 224 * 224
-        # nn.ReLU(inplace=True),
-    )
+    ).type(dtype)
     
     loss_fn = nn.L1Loss()  # TODO: L2 loss
     optimizer = optim.Adam(model_base.parameters(), lr=INIT_LR)
@@ -152,8 +171,11 @@ def run_model(train_data, val_data, test_data):
     eval(model_base, val_data, loss_fn)
 
 def main():
+    print ("Loading dataset...")
     inputs, gold = load_dataset()
+    print ("Making loaders...")
     train, val, test = make_loaders(inputs, gold)
+    print ("Beginning to run model...")
     run_model(train, val, test)
 
 if __name__ == "__main__":

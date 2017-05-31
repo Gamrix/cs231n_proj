@@ -4,6 +4,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+baseline/eval/**
+src/preprocess/**
 
 # C extensions
 *.so
