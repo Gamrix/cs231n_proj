@@ -177,7 +177,7 @@ def run_model(train_data, val_data, test_data):
         nn.Conv2d(16, 3, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 3 * 224 * 224
     ).type(dtype)
     
-    loss_fn = L2Loss()  # TODO: L2 loss
+    loss_fn = L2Loss()
     optimizer = optim.Adam(model_base.parameters(), lr=INIT_LR)
 
     train(model_base, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
