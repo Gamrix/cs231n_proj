@@ -15,8 +15,9 @@ import timeit
 
 class ViewMorphing(nn.Module):
     def __init__(self, image_dim):
-        x = np.arange(image_dim)
-        y = np.arange(image_dim)
+    	self.image_dim = image_dim
+        x = np.arange(self.image_dim)
+        y = np.arange(self.image_dim)
         q = np.transpose([np.repeat(x, len(y)), np.tile(y, len(x))])
         self.q = torch.LongTensor(q)
 
@@ -25,10 +26,8 @@ class ViewMorphing(nn.Module):
         return x.view(N, C, -1)
 
     def forward(self, im1, im2, C, M1, M2):
-        N, C, H, W = im1.size()  # read in N, C, H, W
-        img_dim = 224
         Cflat = self.flatten(C)
-        embed = torch.nn.Embedding(img_dim ** 2, 3)
+        embed = torch.nn.Embedding(self.img_dim ** 2, 3)
         imgs = []
         for img, mask in (im1, M1), (im2, M2):
             if img is im1:
@@ -36,11 +35,11 @@ class ViewMorphing(nn.Module):
             else:
                 samp_2d = self.q - Cflat
 
-            samp_flat = samp_2d[:, 0] + img_dim * samp_2d[:, 1]
+            samp_flat = samp_2d[:, 0] + self.img_dim * samp_2d[:, 1]
             imflat = torch.transpose(self.flatten(img), 1, 2)
             embed.weight = imflat
             res_img_flat = embed(samp_flat)
-            res_img = res_img_flat.view(N, C, H, W)
+            res_img = res_img_flat.view(im1.size())
             # now we want to mask it
 
             imgs.append(res_img * mask)
