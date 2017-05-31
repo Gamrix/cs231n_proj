@@ -161,18 +161,22 @@ def run_model(train_data, val_data, test_data):
         # Conv 1
         nn.Conv2d(6, 32, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 32 * 224 * 224
         nn.ReLU(inplace=True),
+        nn.BatchNorm2d(32),
         nn.Dropout2d(p=DROPOUT),
         # Conv 2
         nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 64 * 224 * 224
         nn.ReLU(inplace=True),
+        nn.BatchNorm2d(64),
         nn.Dropout2d(p=DROPOUT),
         # Conv 3
         nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 32 * 224 * 224
         nn.ReLU(inplace=True),
+        nn.BatchNorm2d(32),
         nn.Dropout2d(p=DROPOUT),
         # Conv 4
         nn.Conv2d(32, 16, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 16 * 224 * 224
         nn.ReLU(inplace=True),
+        nn.BatchNorm2d(16),
         nn.Dropout2d(p=DROPOUT),
         # Conv 5
         nn.Conv2d(16, 3, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 3 * 224 * 224
