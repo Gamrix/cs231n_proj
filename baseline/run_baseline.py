@@ -19,14 +19,14 @@ import numpy as np
 
 from normalizer import normalize, denorm
 
-NUM_TRAIN = 32000
+NUM_TRAIN = 16000
 NUM_VAL = 1600
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 64
 DATA_DIR = "../src/preprocess/prep_res"
-PRINT_EVERY = 1
+PRINT_EVERY = 10
 
-NUM_EPOCHS = 3
+NUM_EPOCHS = 1
 DROPOUT = 0.15
 INIT_LR = 5e-4
 is_local = False
@@ -132,19 +132,20 @@ def eval(model, dev_data, loss_fn):
     print("Running evaluation...")
     total_loss = 0.0
     model.eval()
+    length = len(dev_data)
     for t, (x, y) in enumerate(dev_data):
         x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
         
         scores = model(x_var)
-        print(scores.size())
-        for i in range(NUM_SAVED_SAMPLES):
-            name = "./eval/{}_{}_".format(t, i)
-            imsave(name + "gen.png", np.transpose(denorm(scores[i].data.cpu().numpy()), axes=[1,2,0]))
-            imsave(name + "gold.png", np.transpose(denorm(y_var[i].data.cpu().numpy()), axes=[1,2,0]))
-            x = x_var[i].data.cpu().numpy()
-            imsave(name + "orig_0.png", x[:3,:,:])
-            imsave(name + "orig_1.png", x[3:,:,:])
+        if (t == length-1):
+            for i in range(NUM_SAVED_SAMPLES):
+                name = "./eval/{}_{}_".format(t, i)
+                imsave(name + "gen.png", np.transpose(denorm(scores[i].data.cpu().numpy()), axes=[1,2,0]))
+                imsave(name + "gold.png", np.transpose(denorm(y_var[i].data.cpu().numpy()), axes=[1,2,0]))
+                x = x_var[i].data.cpu().numpy()
+                imsave(name + "orig_0.png", x[:3,:,:])
+                imsave(name + "orig_1.png", x[3:,:,:])
         
         total_loss += loss_fn(scores, y_var).data[0]
 
@@ -160,24 +161,28 @@ def run_model(train_data, val_data, test_data):
         # Conv 1
         nn.Conv2d(6, 32, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 32 * 224 * 224
         nn.ReLU(inplace=True),
+        nn.BatchNorm2d(32),
         nn.Dropout2d(p=DROPOUT),
         # Conv 2
         nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 64 * 224 * 224
         nn.ReLU(inplace=True),
+        nn.BatchNorm2d(64),
         nn.Dropout2d(p=DROPOUT),
         # Conv 3
         nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 32 * 224 * 224
         nn.ReLU(inplace=True),
+        nn.BatchNorm2d(32),
         nn.Dropout2d(p=DROPOUT),
         # Conv 4
         nn.Conv2d(32, 16, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 16 * 224 * 224
         nn.ReLU(inplace=True),
+        nn.BatchNorm2d(16),
         nn.Dropout2d(p=DROPOUT),
         # Conv 5
         nn.Conv2d(16, 3, kernel_size=3, stride=1, padding=(1,1), bias=True), # out 3 * 224 * 224
     ).type(dtype)
     
-    loss_fn = L2Loss()  # TODO: L2 loss
+    loss_fn = L2Loss()
     optimizer = optim.Adam(model_base.parameters(), lr=INIT_LR)
 
     train(model_base, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
