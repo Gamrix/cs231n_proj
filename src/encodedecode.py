@@ -101,9 +101,9 @@ class EncodeDecode(nn.Module):
             )
 
 
-    def forward(self, im1, im2):
-        concat = torch.cat((im1, im2), dim=1)
-        ec3 = self.ec3(concat)
+    def forward(self, im):
+        #concat = torch.cat((im1, im2), dim=1)
+        ec3 = self.ec3(im)
         ec4 = self.ec4(ec3)
         ec5 = self.ec5(ec4)
         ec6 = self.ec6(ec5)
@@ -121,4 +121,4 @@ class EncodeDecode(nn.Module):
         cd3ec3feature = torch.cat((cd3, ec3), dim=1)
         C = self.cc3(cd3ec3feature)
 
-        return M1, (1 - M1), C
+        return im[:,:3], im2[:,3:], C, M1, (1 - M1)

@@ -14,8 +14,8 @@ import timeit
 
 
 class ViewMorphing(nn.Module):
-    def __init__(self, image_dim):
-    	self.image_dim = image_dim
+    def __init__(self):
+    	self.image_dim = 224
         x = np.arange(self.image_dim)
         y = np.arange(self.image_dim)
         q = np.transpose([np.repeat(x, len(y)), np.tile(y, len(x))])
