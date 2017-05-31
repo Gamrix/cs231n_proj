@@ -19,7 +19,7 @@ import numpy as np
 
 from normalizer import normalize, denorm
 
-NUM_TRAIN = 8000
+NUM_TRAIN = 16000
 NUM_VAL = 1600
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 64
@@ -132,18 +132,20 @@ def eval(model, dev_data, loss_fn):
     print("Running evaluation...")
     total_loss = 0.0
     model.eval()
+    length = len(dev_data)
     for t, (x, y) in enumerate(dev_data):
         x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
         
         scores = model(x_var)
-        for i in range(NUM_SAVED_SAMPLES):
-            name = "./eval/{}_{}_".format(t, i)
-            imsave(name + "gen.png", np.transpose(denorm(scores[i].data.cpu().numpy()), axes=[1,2,0]))
-            imsave(name + "gold.png", np.transpose(denorm(y_var[i].data.cpu().numpy()), axes=[1,2,0]))
-            x = x_var[i].data.cpu().numpy()
-            imsave(name + "orig_0.png", x[:3,:,:])
-            imsave(name + "orig_1.png", x[3:,:,:])
+        if (t == length-1):
+            for i in range(NUM_SAVED_SAMPLES):
+                name = "./eval/{}_{}_".format(t, i)
+                imsave(name + "gen.png", np.transpose(denorm(scores[i].data.cpu().numpy()), axes=[1,2,0]))
+                imsave(name + "gold.png", np.transpose(denorm(y_var[i].data.cpu().numpy()), axes=[1,2,0]))
+                x = x_var[i].data.cpu().numpy()
+                imsave(name + "orig_0.png", x[:3,:,:])
+                imsave(name + "orig_1.png", x[3:,:,:])
         
         total_loss += loss_fn(scores, y_var).data[0]
 
