@@ -29,13 +29,19 @@ PRINT_EVERY = 1
 NUM_EPOCHS = 3
 DROPOUT = 0.15
 INIT_LR = 5e-4
+is_local = False
 
 dtype=torch.cuda.FloatTensor
 
 if os.path.exists("../john_local_flag.txt"):
     # this is because my local machine can't handle the batch size...
+    is_local = True
     BATCH_SIZE = 4
     NUM_EPOCHS = 1
+    dtype = torch.FloatTensor
+    NUM_TRAIN = 100
+    NUM_VAL = 20
+    NUM_SAVED_SAMPLES = 4  # needs to be less than or equal to batch size according to Matt
 
 class ChunkSampler(sampler.Sampler):
     """Samples elements sequentially from some offset. 
@@ -57,11 +63,12 @@ def load_dataset():
     ground_truths = []
     inputs = []
     length = len(os.listdir(DATA_DIR))
-    if os.path.isfile('saved_in_data') and os.path.isfile('saved_ground_truths'):
+    if os.path.isfile('saved_in_data.npy') and os.path.isfile('saved_ground_truths.npy'):
         print ("Reading cached numpy data in from file...")
-        inputs = np.fromfile('saved_in_data')
-        ground_truths = np.fromfile('saved_ground_truths')
+        inputs = np.load('saved_in_data.npy')
+        ground_truths = np.load('saved_ground_truths.npy')
         return inputs, ground_truths
+
     for i, dir in enumerate(os.listdir(DATA_DIR)):
         print ("\tOn dir %d of %d" % (i, length))
         src_p = DATA_DIR + "/" + dir
@@ -73,7 +80,11 @@ def load_dataset():
 
         assert (len(src_f) % 3 == 0)
 
-        for zero, truth, one in zip(*[iter(src_f)]*3):
+        files = zip(*[iter(src_f)]*3)
+        if is_local:
+            files = list(files)[:30]
+
+        for zero, truth, one in files:
             t = imread(truth)
             z = imread(zero)
             o = imread(one)
@@ -83,10 +94,8 @@ def load_dataset():
     inputs, ground_truths = np.array(inputs), np.array(ground_truths)
 
     print ("Caching numpy data for next run...")
-    with open('saved_in_data', 'w+') as f:
-        inputs.tofile(f)
-    with open('saved_ground_truths', 'w+') as f:
-        ground_truths.tofile(f)
+    np.save('saved_in_data.npy', inputs)
+    np.save('saved_ground_truths.npy', ground_truths)
 
     return inputs, ground_truths
 
