@@ -19,14 +19,14 @@ import numpy as np
 
 from normalizer import normalize, denorm
 
-NUM_TRAIN = 32000
+NUM_TRAIN = 8000
 NUM_VAL = 1600
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 64
 DATA_DIR = "../src/preprocess/prep_res"
-PRINT_EVERY = 1
+PRINT_EVERY = 10
 
-NUM_EPOCHS = 3
+NUM_EPOCHS = 1
 DROPOUT = 0.15
 INIT_LR = 5e-4
 
@@ -127,7 +127,6 @@ def eval(model, dev_data, loss_fn):
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
         
         scores = model(x_var)
-        print(scores.size())
         for i in range(NUM_SAVED_SAMPLES):
             name = "./eval/{}_{}_".format(t, i)
             imsave(name + "gen.png", np.transpose(denorm(scores[i].data.cpu().numpy()), axes=[1,2,0]))
