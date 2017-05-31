@@ -25,13 +25,24 @@ class ViewMorphing(nn.Module):
         return x.view(N, C, -1)
 
     def forward(self, im1, im2, C, M1, M2):
-        Cflat = flatten(C)
-        embed = torch.nn.Embedding()
-        for img in im1, im2:
+        N, C, H, W = im1.size()  # read in N, C, H, W
+        img_dim = 224
+        Cflat = self.flatten(C)
+        embed = torch.nn.Embedding(img_dim ** 2, 3)
+        imgs = []
+        for img, mask in (im1, M1), (im2, M2):
             if img is im1:
                 samp_2d = self.q + Cflat
             else:
                 samp_2d = self.q - Cflat
 
-            samp_flat = samp_2d[:, 0] + 224 * samp_2d[:, 1]
-            imflat = torch.transpose(flatten(img), 1, 2)
+            samp_flat = samp_2d[:, 0] + img_dim * samp_2d[:, 1]
+            imflat = torch.transpose(self.flatten(img), 1, 2)
+            embed.weight = imflat
+            res_img_flat = embed(samp_flat)
+            res_img = res_img_flat.view(N, C, H, W)
+            # now we want to mask it
+
+            imgs.append(res_img * mask)
+
+        return imgs[0] + imgs[1]
