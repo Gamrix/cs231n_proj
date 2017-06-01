@@ -119,7 +119,8 @@ def train(model, loss_fn, optimizer, train_data, num_epochs = 1):
         for t, (x, y) in enumerate(train_data):
             x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
             y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
-
+            
+            print(x_var.size())
             scores = model(x_var)
             
             loss = loss_fn(scores, y_var)
@@ -130,7 +131,7 @@ def train(model, loss_fn, optimizer, train_data, num_epochs = 1):
             loss.backward()
             optimizer.step()
 
-def eval(model, dev_data, loss_fn):
+def evaluate(model, dev_data, loss_fn):
     print("Running evaluation...")
     total_loss = 0.0
     model.eval()
@@ -160,15 +161,15 @@ class L2Loss(torch.nn.Module):
 
 def run_model(train_data, val_data, test_data):
     model = nn.Sequential (
-        ViewMorphing(),
-        EncodeDecode()
+        EncodeDecode(),
+        ViewMorphing()
     ).type(dtype)
     
     loss_fn = L2Loss()
-    optimizer = optim.Adam(model_base.parameters(), lr=INIT_LR)
+    optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
 
-    train(model_base, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
-    eval(model_base, val_data, loss_fn)
+    train(model, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
+    evaluate(model, val_data, loss_fn)
 
 def main():
     print ("Loading dataset...")
