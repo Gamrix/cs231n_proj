@@ -27,27 +27,31 @@ class ViewMorphing(nn.Module):
         N, C, H, W = x.size()  # read in N, C, H, W
         return x.contiguous().view(N, C, -1)
 
+    def coordToInd(self, x):
+        return x[:, 0] + self.image_dim * x[:, 1]
+
+    def get_pixel(self, point, neighbor, image):
+        weight = torch.cumprod(1 - torch.abs(point - neighbor), dim=2)
+        pixel = torch.index_select(image, 2, coordToInd(neighbor))
+        return weight.extend_as(pixel) * pixel
+
+    def get_masked_RP(self, image, mask, qi):
+        imflat = self.flatten(img)
+        res_img_flat = \
+            self.get_pixel(qi, torch.cat((samp2d[:, 0].floor(), samp2d[:,1].floor()), dim=1), imflat) + \
+            self.get_pixel(qi, torch.cat((samp2d[:, 0].ceil(), samp2d[:,1].floor()), dim=1), imflat) + \
+            self.get_pixel(qi, torch.cat((samp2d[:, 0].floor(), samp2d[:,1].ceil()), dim=1), imflat) + \
+            self.get_pixel(qi, torch.cat((samp2d[:, 0].ceil(), samp2d[:,1].ceil()), dim=1), imflat)
+
+        res_img = res_img_flat.view(im1.size())
+        return res_img * mask
+
     def forward(self, arglist):
         im1, im2, C, M1, M2 = arglist
         Cflat = self.flatten(C)
-        Cflat = Cflat.type(dtype)
-        #embed = torch.nn.Embedding(self.image_dim ** 2, 3)
-        imgs = []
-        for img, mask in (im1, M1), (im2, M2):
-            if img is im1:
-                print(self.q.size(), Cflat.size())
-                samp_2d = self.q.expand_as(Cflat) + Cflat
-            else:
-                samp_2d = self.q.expand_as(Cflat) - Cflat
 
-            samp_flat = samp_2d[:, 0] + self.image_dim * samp_2d[:, 1]
-            imflat = torch.transpose(self.flatten(img), 1, 2)
-            #embed.weight = imflat
-            ##res_img_flat = embed(samp_flat)
-            res_img_flat = torch.index_select(imflat, 0, samp_flat)
-            res_img = res_img_flat.view(im1.size())
-            # now we want to mask it
+        return self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat) + \
+            self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
 
-            imgs.append(res_img * mask)
 
-        return imgs[0] + imgs[1]
+            
