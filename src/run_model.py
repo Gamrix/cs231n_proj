@@ -34,6 +34,7 @@ INIT_LR = 5e-4
 is_local = False
 
 dtype=torch.cuda.FloatTensor
+#dtype=torch.FloatTensor
 
 if os.path.exists("../john_local_flag.txt"):
     # this is because my local machine can't handle the batch size...
@@ -120,7 +121,6 @@ def train(model, loss_fn, optimizer, train_data, num_epochs = 1):
             x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
             y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
             
-            print(x_var.size())
             scores = model(x_var)
             
             loss = loss_fn(scores, y_var)

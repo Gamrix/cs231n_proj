@@ -32,31 +32,26 @@ class ViewMorphing(nn.Module):
         return (x[:, 0] + self.image_dim * x[:, 1]).type(dtypelong).detach()
 
     def get_pixel(self, point, neighbor, image):
-        print("init:", image.size(), neighbor.size())
         weight = 1 - torch.abs(point - neighbor)
         weight = weight[:, 0] * weight[:, 1]
         inds = self.coordToInd(neighbor)
-        print("inds:", inds.size())
-        a = torch.gather(image[:,0], 0, inds)
-        b = torch.gather(image[:,1], 0, inds)
-        c = torch.gather(image[:,2], 0, inds)
-        print("abc:", a.size(), b.size(), c.size())
-        pixel = torch.stack((a, b, c), dim=2)
-        print("pixel:", pixel.size())
-        #print(weight.size(), pixel.size())
-        return weight * pixel
+        a = torch.gather(image[:,0], 1, inds)
+        b = torch.gather(image[:,1], 1, inds)
+        c = torch.gather(image[:,2], 1, inds)
+        pixel = torch.stack((a, b, c), dim=1)
+        return weight.unsqueeze(1).expand_as(pixel) * pixel
 
     def get_masked_RP(self, image, mask, qi):
-        print("qi:", qi.size())
         imflat = self.flatten(image)
+        qi = torch.clamp(qi, 0, self.image_dim - 1)
         res_img_flat = \
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].floor()), dim=1), imflat) + \
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].ceil(), qi[:,1:2].floor()), dim=1), imflat) + \
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].ceil()), dim=1), imflat) + \
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].ceil(), qi[:,1:2].ceil()), dim=1), imflat)
 
-        res_img = res_img_flat.view(im1.size())
-        return res_img * mask
+        res_img = res_img_flat.view_as(image)
+        return res_img * mask.expand_as(res_img)
 
     def forward(self, arglist):
         im1, im2, C, M1, M2 = arglist
