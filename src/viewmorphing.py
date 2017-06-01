@@ -12,7 +12,8 @@ import numpy as np
 
 import timeit
 
-dtype=torch.cuda.LongTensor
+dtype=torch.cuda.FloatTensor
+dtypelong=torch.cuda.LongTensor
 
 class ViewMorphing(nn.Module):
     def __init__(self):
@@ -28,20 +29,31 @@ class ViewMorphing(nn.Module):
         return x.contiguous().view(N, C, -1)
 
     def coordToInd(self, x):
-        return x[:, 0] + self.image_dim * x[:, 1]
+        return (x[:, 0] + self.image_dim * x[:, 1]).type(dtypelong).detach()
 
     def get_pixel(self, point, neighbor, image):
-        weight = torch.cumprod(1 - torch.abs(point - neighbor), dim=2)
-        pixel = torch.index_select(image, 2, coordToInd(neighbor))
-        return weight.extend_as(pixel) * pixel
+        print("init:", image.size(), neighbor.size())
+        weight = 1 - torch.abs(point - neighbor)
+        weight = weight[:, 0] * weight[:, 1]
+        inds = self.coordToInd(neighbor)
+        print("inds:", inds.size())
+        a = torch.gather(image[:,0], 0, inds)
+        b = torch.gather(image[:,1], 0, inds)
+        c = torch.gather(image[:,2], 0, inds)
+        print("abc:", a.size(), b.size(), c.size())
+        pixel = torch.stack((a, b, c), dim=2)
+        print("pixel:", pixel.size())
+        #print(weight.size(), pixel.size())
+        return weight * pixel
 
     def get_masked_RP(self, image, mask, qi):
-        imflat = self.flatten(img)
+        print("qi:", qi.size())
+        imflat = self.flatten(image)
         res_img_flat = \
-            self.get_pixel(qi, torch.cat((samp2d[:, 0].floor(), samp2d[:,1].floor()), dim=1), imflat) + \
-            self.get_pixel(qi, torch.cat((samp2d[:, 0].ceil(), samp2d[:,1].floor()), dim=1), imflat) + \
-            self.get_pixel(qi, torch.cat((samp2d[:, 0].floor(), samp2d[:,1].ceil()), dim=1), imflat) + \
-            self.get_pixel(qi, torch.cat((samp2d[:, 0].ceil(), samp2d[:,1].ceil()), dim=1), imflat)
+                self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].floor()), dim=1), imflat) + \
+                self.get_pixel(qi, torch.cat((qi[:, 0:1].ceil(), qi[:,1:2].floor()), dim=1), imflat) + \
+                self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].ceil()), dim=1), imflat) + \
+                self.get_pixel(qi, torch.cat((qi[:, 0:1].ceil(), qi[:,1:2].ceil()), dim=1), imflat)
 
         res_img = res_img_flat.view(im1.size())
         return res_img * mask
@@ -50,8 +62,10 @@ class ViewMorphing(nn.Module):
         im1, im2, C, M1, M2 = arglist
         Cflat = self.flatten(C)
 
-        return self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat) + \
-            self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
+        a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)
+        b = self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
+
+        return a + b
 
 
             
