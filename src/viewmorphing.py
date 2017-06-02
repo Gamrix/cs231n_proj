@@ -9,11 +9,16 @@ import torchvision.datasets as dset
 import torchvision.transforms as T
 
 import numpy as np
+import os
 
 import timeit
 
 dtype=torch.cuda.FloatTensor
 dtypelong=torch.cuda.LongTensor
+
+if os.path.exists("../john_local_flag.txt"):
+    dtype=torch.FloatTensor
+    dtypelong=torch.LongTensor
 
 class ViewMorphing(nn.Module):
     def __init__(self, img_dim=224):
@@ -29,7 +34,7 @@ class ViewMorphing(nn.Module):
         return x.contiguous().view(N, C, -1)
 
     def coordToInd(self, x):
-        return (x[:, 0] + self.image_dim * x[:, 1]).type(dtypelong).detach()
+        return (x[:, 1] + self.image_dim * x[:, 0]).type(dtypelong).detach()
 
     def get_pixel(self, point, neighbor, image):
 
