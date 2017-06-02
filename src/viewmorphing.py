@@ -59,7 +59,7 @@ class ViewMorphing(nn.Module):
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].ceil(), qi[:,1:2].ceil()), dim=1), imflat)
 
         # encourage some good gradients by penalizing for going out of bound
-        res_img_flat = res_img_flat / (1 + torch.sum((qi_orig - qi) ** 2, axis=1))
+        res_img_flat = res_img_flat #/ (1 + torch.sum((qi_orig - qi) ** 2, dim=1)).unsqueeze(1).expand_as(res_img_flat)
 
         res_img = res_img_flat.view_as(image)
         return res_img * mask.expand_as(res_img)
