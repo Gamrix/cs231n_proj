@@ -6,6 +6,7 @@ __pycache__/
 *$py.class
 baseline/eval/**
 src/preprocess/**
+*.npy
 
 # C extensions
 *.so

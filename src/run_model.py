@@ -24,13 +24,13 @@ from viewmorphing import ViewMorphing
 NUM_TRAIN = 16000
 NUM_VAL = 1600
 NUM_SAVED_SAMPLES = 16
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 10
 
-NUM_EPOCHS = 1
+NUM_EPOCHS = 10
 DROPOUT = 0.15
-INIT_LR = 5e-4
+INIT_LR = 1e-4
 is_local = False
 
 dtype=torch.cuda.FloatTensor
