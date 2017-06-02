@@ -16,9 +16,9 @@ dtype=torch.cuda.FloatTensor
 dtypelong=torch.cuda.LongTensor
 
 class ViewMorphing(nn.Module):
-    def __init__(self):
+    def __init__(self, img_dim=224):
         super(ViewMorphing, self).__init__()
-        self.image_dim = 224
+        self.image_dim = img_dim
         x = np.arange(self.image_dim)
         y = np.arange(self.image_dim)
         q = np.array([np.repeat(x, len(y)), np.tile(y, len(x))])
@@ -32,8 +32,11 @@ class ViewMorphing(nn.Module):
         return (x[:, 0] + self.image_dim * x[:, 1]).type(dtypelong).detach()
 
     def get_pixel(self, point, neighbor, image):
+
+        # weighting result pixel bilinearly
         weight = 1 - torch.abs(point - neighbor)
         weight = weight[:, 0] * weight[:, 1]
+
         inds = self.coordToInd(neighbor)
         a = torch.gather(image[:,0], 1, inds)
         b = torch.gather(image[:,1], 1, inds)
@@ -41,14 +44,17 @@ class ViewMorphing(nn.Module):
         pixel = torch.stack((a, b, c), dim=1)
         return weight.unsqueeze(1).expand_as(pixel) * pixel
 
-    def get_masked_RP(self, image, mask, qi):
+    def get_masked_RP(self, image, mask, qi_orig):
         imflat = self.flatten(image)
-        qi = torch.clamp(qi, 0, self.image_dim - 1)
+        qi = torch.clamp(qi_orig, 0.001, self.image_dim - 1.001)
         res_img_flat = \
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].floor()), dim=1), imflat) + \
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].ceil(), qi[:,1:2].floor()), dim=1), imflat) + \
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].ceil()), dim=1), imflat) + \
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].ceil(), qi[:,1:2].ceil()), dim=1), imflat)
+
+        # encourage some good gradients by penalizing for going out of bound
+        res_img_flat = res_img_flat / (1 + torch.sum((qi_orig - qi) ** 2, axis=1))
 
         res_img = res_img_flat.view_as(image)
         return res_img * mask.expand_as(res_img)
