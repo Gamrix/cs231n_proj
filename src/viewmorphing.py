@@ -67,6 +67,7 @@ class ViewMorphing(nn.Module):
     def forward(self, arglist):
         im1, im2, C, M1, M2 = arglist
         Cflat = self.flatten(C)
+        print(Cflat.mean())
 
         a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)
         b = self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
