@@ -60,18 +60,26 @@ class ViewMorphing(nn.Module):
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].ceil(), qi[:,1:2].ceil()), dim=1), imflat)
 
         # encourage some good gradients by penalizing for going out of bound
-        res_img_flat = res_img_flat #/ (1 + torch.sum((qi_orig - qi) ** 2, dim=1)).unsqueeze(1).expand_as(res_img_flat)
+        # scale_factor = (1 + (torch.sum(qi_rescale - qi, dim=1) / self.image_dim) ** 2)
+        # res_img_flat= res_img_flat / scale_factor
+
+        scale_factor = (1 + (torch.sum(qi_rescale - qi, dim=1) / self.image_dim))
+        scale_factor.unsqueeze(1)
+        scale_factor = scale_factor.expand_as(res_img_flat)
+        res_img_flat= res_img_flat - scale_factor
 
         res_img = res_img_flat.view_as(image)
+
         return res_img * mask.expand_as(res_img)
 
     def forward(self, arglist):
         im1, im2, C, M1, M2 = arglist
         Cflat = self.flatten(C)
         print(Cflat.mean())
+        print("max: {} \n min: {}".format(Cflat.max(), Cflat.min()))
 
-        a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)
-        b = self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
+        a, oob_loss_a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)
+        b, oob_loss_b = self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
 
-        return a + b
+        return a + b, oob_loss_a + oob_loss_b
 
