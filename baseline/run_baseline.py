@@ -31,7 +31,7 @@ DROPOUT = 0.15
 INIT_LR = 5e-4
 is_local = False
 
-dtype=torch.cuda.FloatTensor
+dtype = torch.cuda.FloatTensor
 
 if os.path.exists("../john_local_flag.txt"):
     # this is because my local machine can't handle the batch size...
