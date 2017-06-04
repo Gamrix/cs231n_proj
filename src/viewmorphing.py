@@ -63,14 +63,12 @@ class ViewMorphing(nn.Module):
         # scale_factor = (1 + (torch.sum(qi_rescale - qi, dim=1) / self.image_dim) ** 2)
         # res_img_flat= res_img_flat / scale_factor
 
-        scale_factor = (1 + (torch.sum(qi_rescale - qi, dim=1) / self.image_dim))
-        scale_factor.unsqueeze(1)
-        scale_factor = scale_factor.expand_as(res_img_flat)
-        res_img_flat= res_img_flat - scale_factor
-
+        # Want at least 1 grdi oob before it gets significant
+        # want some additional loss factor lowering to prevent reversion to zero.
+        oob_loss = torch.mean((qi_rescale - qi) ** 2) / self.image_dim ** 2 * 0.01
         res_img = res_img_flat.view_as(image)
 
-        return res_img * mask.expand_as(res_img)
+        return res_img * mask.expand_as(res_img), oob_loss
 
     def forward(self, arglist):
         im1, im2, C, M1, M2 = arglist

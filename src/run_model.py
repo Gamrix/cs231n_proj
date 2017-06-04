@@ -121,14 +121,14 @@ def train(model, loss_fn, optimizer, train_data, num_epochs = 1):
             x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
             y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
             
-            scores = model(x_var)
+            scores, oob_loss = model(x_var)
             
             loss = loss_fn(scores, y_var)
             if (t + 1) % PRINT_EVERY == 0:
                 print('\tt = %d, loss = %.4f' % (t + 1, loss.data[0]))
 
             optimizer.zero_grad()
-            loss.backward()
+            (loss + oob_loss).backward()
             optimizer.step()
 
 def evaluate(model, dev_data, loss_fn):
