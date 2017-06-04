@@ -42,7 +42,7 @@ if os.path.exists("../john_local_flag.txt"):
     BATCH_SIZE = 4
     NUM_EPOCHS = 1
     dtype = torch.FloatTensor
-    NUM_TRAIN = 100
+    NUM_TRAIN = 300
     NUM_VAL = 20
     NUM_SAVED_SAMPLES = 4  # needs to be less than or equal to batch size according to Matt
 
@@ -85,7 +85,7 @@ def load_dataset():
 
         files = zip(*[iter(src_f)]*3)
         if is_local:
-            files = list(files)[:30]
+            files = list(files)[:50]
 
         for zero, truth, one in files:
             t = imread(truth)
@@ -140,7 +140,7 @@ def evaluate(model, dev_data, loss_fn):
         x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
         
-        scores = model(x_var)
+        scores = model(x_var)[0]
         if (t == length-1):
             for i in range(NUM_SAVED_SAMPLES):
                 name = "./eval/{}_{}_".format(t, i)
