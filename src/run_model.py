@@ -30,7 +30,7 @@ PRINT_EVERY = 10
 
 NUM_EPOCHS = 1
 DROPOUT = 0.15
-INIT_LR = 1e-2
+INIT_LR = 1e-4
 is_local = False
 
 dtype=torch.cuda.FloatTensor
