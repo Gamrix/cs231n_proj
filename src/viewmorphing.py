@@ -51,7 +51,7 @@ class ViewMorphing(nn.Module):
 
     def get_masked_RP(self, image, mask, qi_orig):
         imflat = self.flatten(image)
-        qi_rescale = qi_orig * self.image_dim
+        qi_rescale = qi_orig #* self.image_dim
         qi = torch.clamp(qi_rescale, 0.001, self.image_dim - 1.001)
         res_img_flat = \
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].floor()), dim=1), imflat) + \
