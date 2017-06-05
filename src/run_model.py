@@ -25,13 +25,13 @@ from directgen import EncodeDecodeDirect
 NUM_TRAIN = 16000
 NUM_VAL = 16
 NUM_SAVED_SAMPLES = 16
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 10
 
-NUM_EPOCHS = 1
+NUM_EPOCHS = 2
 DROPOUT = 0.15
-INIT_LR = 1e-5
+INIT_LR = 2e-4
 is_local = False
 
 dtype=torch.cuda.FloatTensor
@@ -114,7 +114,7 @@ def make_loaders(inputs, gold):
 
     return train, val, test
 
-def train(model, loss_fn, optimizer, train_data, num_epochs = 1):
+def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
     for epoch in range(num_epochs):
         print('Starting epoch %d / %d...' % (epoch + 1, num_epochs))
         model.train()
@@ -127,12 +127,14 @@ def train(model, loss_fn, optimizer, train_data, num_epochs = 1):
             loss = loss_fn(scores, y_var)
             if (t + 1) % PRINT_EVERY == 0:
                 print('\tt = %d, loss = %.4f' % (t + 1, loss.data[0]))
+            if (t) % 50 == 0:
+                evaluate(model, val_data, loss_fn)
 
             optimizer.zero_grad()
             (loss + oob_loss).backward()
             optimizer.step()
 
-def evaluate(model, dev_data, loss_fn):
+def evaluate(model, dev_data, loss_fn, save=False):
     print("Running evaluation...")
     total_loss = 0.0
     model.eval()
@@ -142,7 +144,7 @@ def evaluate(model, dev_data, loss_fn):
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
         
         scores = model(x_var)[0]
-        if (t == length-1):
+        if (t == length-1 and save):
             for i in range(NUM_SAVED_SAMPLES):
                 name = "./eval/{}_{}_".format(t, i)
                 imsave(name + "gen.png", np.transpose(denorm(scores[i].data.cpu().numpy()), axes=[1,2,0]))
@@ -173,8 +175,8 @@ def run_model(train_data, val_data, test_data):
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
 
-    train(model, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
-    evaluate(model, val_data, loss_fn)
+    train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS) 
+    evaluate(model, val_data, loss_fn, save=True)
 
 def main():
     print ("Loading dataset...")
