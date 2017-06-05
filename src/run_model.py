@@ -157,7 +157,7 @@ def evaluate(model, dev_data, loss_fn):
 
 class L2Loss(torch.nn.Module):
     def forward(self, y_pred, y_true):
-        return torch.mean(torch.sum((y_pred - y_true) **2, dim=0))
+        return torch.mean((y_pred - y_true) **2)
 
 def run_model(train_data, val_data, test_data):
     model = nn.Sequential (
