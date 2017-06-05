@@ -20,6 +20,7 @@ import numpy as np
 from normalizer import normalize, denorm
 from encodedecode import EncodeDecode
 from viewmorphing import ViewMorphing
+from directgen import EncodeDecodeDirect
 
 NUM_TRAIN = 16000
 NUM_VAL = 16
@@ -30,7 +31,7 @@ PRINT_EVERY = 10
 
 NUM_EPOCHS = 1
 DROPOUT = 0.15
-INIT_LR = 1e-4
+INIT_LR = 1e-5
 is_local = False
 
 dtype=torch.cuda.FloatTensor
@@ -157,13 +158,16 @@ def evaluate(model, dev_data, loss_fn):
 
 class L2Loss(torch.nn.Module):
     def forward(self, y_pred, y_true):
-        return torch.mean(torch.sum((y_pred - y_true) **2, dim=0))
+        diffsq = (y_pred - y_true) **2
+        return torch.mean(torch.sum(diffsq.view((-1, 224*224*3)), dim=1))
 
 def run_model(train_data, val_data, test_data):
-    model = nn.Sequential (
+    '''model = nn.Sequential (
         EncodeDecode(),
         ViewMorphing()
-    ).type(dtype)
+    ).type(dtype)'''
+
+    model = EncodeDecodeDirect().type(dtype)
     
     loss_fn = L2Loss()
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
