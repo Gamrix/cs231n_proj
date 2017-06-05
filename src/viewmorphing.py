@@ -73,8 +73,8 @@ class ViewMorphing(nn.Module):
     def forward(self, arglist):
         im1, im2, C, M1, M2 = arglist
         Cflat = self.flatten(C)
-        print(Cflat.mean())
-        print("max: {} \n min: {}".format(Cflat.max(), Cflat.min()))
+        #print(Cflat.mean())
+        #print("max: {} \n min: {}".format(Cflat.max(), Cflat.min()))
         # cflat is supposed to be between -1 and 1
 
         a, oob_loss_a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)

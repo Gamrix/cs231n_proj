@@ -22,16 +22,16 @@ from encodedecode import EncodeDecode
 from viewmorphing import ViewMorphing
 from directgen import EncodeDecodeDirect
 
-NUM_TRAIN = 16000
+NUM_TRAIN = 64#16000
 NUM_VAL = 16
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
-PRINT_EVERY = 10
+PRINT_EVERY = 1
 
-NUM_EPOCHS = 2
+NUM_EPOCHS = 100
 DROPOUT = 0.15
-INIT_LR = 2e-4
+INIT_LR = 1e-4
 is_local = False
 
 dtype=torch.cuda.FloatTensor
@@ -126,7 +126,7 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             
             loss = loss_fn(scores, y_var)
             if (t + 1) % PRINT_EVERY == 0:
-                print('\tt = %d, loss = %.4f' % (t + 1, loss.data[0]))
+                print('\ttraining: t = %d, loss = %.4f' % (t + 1, loss.data[0]))
             if (t) % 50 == 0:
                 evaluate(model, val_data, loss_fn)
 
@@ -164,19 +164,20 @@ class L2Loss(torch.nn.Module):
         return torch.mean(torch.sum(diffsq.view((-1, 224*224*3)), dim=1))
 
 def run_model(train_data, val_data, test_data):
-    '''model = nn.Sequential (
+    model = nn.Sequential (
         EncodeDecode(),
         ViewMorphing()
-    ).type(dtype)'''
+    ).type(dtype)
 
-    model = EncodeDecodeDirect().type(dtype)
+    #model = EncodeDecodeDirect().type(dtype)
     
     loss_fn = L2Loss()
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
 
     train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS) 
-    evaluate(model, val_data, loss_fn, save=True)
+    #evaluate(model, val_data, loss_fn, save=True)
+    evaluate(model, train_data, loss_fn, save=True)
 
 def main():
     print ("Loading dataset...")
