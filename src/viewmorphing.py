@@ -65,10 +65,9 @@ class ViewMorphing(nn.Module):
 
         # Want at least 1 grdi oob before it gets significant
         # want some additional loss factor lowering to prevent reversion to zero.
-        oob_loss = torch.mean((qi_rescale - qi) ** 2) / self.image_dim ** 2 * 0.0001
+        oob_loss = torch.mean((qi_rescale - qi) ** 2) / self.image_dim ** 2 * 0.01
         res_img = res_img_flat.view_as(image)
 
-        mask = mask / torch.sum(mask).expand_as(mask)
         return res_img * mask.expand_as(res_img), oob_loss
 
     def forward(self, arglist):

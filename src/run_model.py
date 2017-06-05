@@ -21,16 +21,16 @@ from normalizer import normalize, denorm
 from encodedecode import EncodeDecode
 from viewmorphing import ViewMorphing
 
-NUM_TRAIN = 16000
+NUM_TRAIN = 16#16000
 NUM_VAL = 1600
-NUM_SAVED_SAMPLES = 16
+NUM_SAVED_SAMPLES = 4
 BATCH_SIZE = 4
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 10
 
 NUM_EPOCHS = 1
 DROPOUT = 0.15
-INIT_LR = 1e-2
+INIT_LR = 1e-3
 is_local = False
 
 dtype=torch.cuda.FloatTensor
