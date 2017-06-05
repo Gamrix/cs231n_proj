@@ -22,7 +22,7 @@ from encodedecode import EncodeDecode
 from viewmorphing import ViewMorphing
 
 NUM_TRAIN = 16000
-NUM_VAL = 1600
+NUM_VAL = 16
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 32
 DATA_DIR = "preprocess/prep_res"
@@ -169,7 +169,7 @@ def run_model(train_data, val_data, test_data):
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
 
-    #train(model, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
+    train(model, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
     evaluate(model, val_data, loss_fn)
 
 def main():
