@@ -114,6 +114,7 @@ class EncodeDecode(nn.Module):
         ec6 = self.ec6(ec5)
 
         M1 = self.vc3sig(ec6)
+        # already a sigmoid
 
         cd1 = self.cd1(ec6)
         ec5feature = self.ec5feature(ec5)
