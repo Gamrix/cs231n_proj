@@ -29,7 +29,7 @@ BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 1
 
-NUM_EPOCHS = 1000
+NUM_EPOCHS = 1#1000
 DROPOUT = 0.15
 INIT_LR = 1e-4
 is_local = False
