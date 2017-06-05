@@ -21,16 +21,16 @@ from normalizer import normalize, denorm
 from encodedecode import EncodeDecode
 from viewmorphing import ViewMorphing
 
-NUM_TRAIN = 16#16000
+NUM_TRAIN = 16000
 NUM_VAL = 1600
-NUM_SAVED_SAMPLES = 4
-BATCH_SIZE = 4
+NUM_SAVED_SAMPLES = 16
+BATCH_SIZE = 32
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 10
 
 NUM_EPOCHS = 1
 DROPOUT = 0.15
-INIT_LR = 1e-3
+INIT_LR = 1e-4
 is_local = False
 
 dtype=torch.cuda.FloatTensor
@@ -157,7 +157,7 @@ def evaluate(model, dev_data, loss_fn):
 
 class L2Loss(torch.nn.Module):
     def forward(self, y_pred, y_true):
-        return torch.mean((y_pred - y_true) **2)
+        return torch.mean(torch.sum((y_pred - y_true) **2, dim=0))
 
 def run_model(train_data, val_data, test_data):
     model = nn.Sequential (
@@ -169,7 +169,7 @@ def run_model(train_data, val_data, test_data):
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
 
-    train(model, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
+    #train(model, loss_fn, optimizer, train_data, num_epochs=NUM_EPOCHS) 
     evaluate(model, val_data, loss_fn)
 
 def main():
