@@ -77,12 +77,8 @@ class ViewMorphing(nn.Module):
         print("max: {} \n min: {}".format(Cflat.max(), Cflat.min()))
         # cflat is supposed to be between -1 and 1
 
-        total_mask = M1 + M2
-        M1_new = M1 / total_mask
-        M2_new = M2 / total_mask
-
-        a, oob_loss_a = self.get_masked_RP(im1, M1_new, self.q.expand_as(Cflat) + Cflat)
-        b, oob_loss_b = self.get_masked_RP(im2, M2_new, self.q.expand_as(Cflat) - Cflat)
+        a, oob_loss_a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)
+        b, oob_loss_b = self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
 
         return a + b, oob_loss_a + oob_loss_b
 
