@@ -171,6 +171,34 @@ class L2Loss(torch.nn.Module):
         diffsq = (y_pred - y_true) **2
         return torch.mean(torch.sum(diffsq.view((-1, 224*224*3)), dim=1))
 
+class TextureLoss(torch.nn.Module):
+    """
+    Texture Loss is a L2 loss that also penalizes for deltas (textures) over various distances.
+    """
+    def forward(self, y_pred, y_true):
+        loss = self.l2_loss(y_pred, y_true)
+        text_loss = 0
+        for i in range(3):
+            dist = 2 ** 3
+            text_loss += self.l2_loss(self.delta_x(y_pred, dist), self.delta_x(y_true, dist))
+            text_loss += self.l2_loss(self.delta_y(y_pred, dist), self.delta_y(y_true, dist))
+
+        texture_loss_weight = 0.25
+        return loss + texture_loss_weight * text_loss
+
+    @staticmethod
+    def delta_x(image, offset):
+        return image[:, :, :, :-offset] - image[:, :, :, offset:]
+
+    @staticmethod
+    def delta_y(image, offset):
+        return image[:, :, :-offset, :] - image[:, :, offset:, :]
+
+    @staticmethod
+    def l2_loss(y_pred, y_true):
+        diffsq = (y_pred - y_true) **2
+        return torch.mean(torch.sum(diffsq.view((-1, 224*224*3)), dim=1))
+
 def run_model(train_data, val_data, test_data):
     model = nn.Sequential (
         EncodeDecode(),
