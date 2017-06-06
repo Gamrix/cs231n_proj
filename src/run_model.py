@@ -176,7 +176,7 @@ class TextureLoss(torch.nn.Module):
     Texture Loss is a L2 loss that also penalizes for deltas (textures) over various distances.
     """
     def __init__(self, texture_loss_weight=0.25):
-        self.texture_loss_weight = self.texture_loss_weight
+        self.texture_loss_weight = texture_loss_weight
 
     def forward(self, y_pred, y_true):
         loss = self.l2_loss(y_pred, y_true)
