@@ -59,10 +59,8 @@ class ViewMorphing(nn.Module):
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].ceil()), dim=1), imflat) + \
                 self.get_pixel(qi, torch.cat((qi[:, 0:1].ceil(), qi[:,1:2].ceil()), dim=1), imflat)
 
+        # Extra regularization:
         # encourage some good gradients by penalizing for going out of bound
-        # scale_factor = (1 + (torch.sum(qi_rescale - qi, dim=1) / self.image_dim) ** 2)
-        # res_img_flat= res_img_flat / scale_factor
-
         # Want at least 1 grdi oob before it gets significant
         # want some additional loss factor lowering to prevent reversion to zero.
         oob_loss = torch.mean((qi_rescale - qi) ** 2) / self.image_dim ** 2 * 0.01
@@ -80,5 +78,16 @@ class ViewMorphing(nn.Module):
         a, oob_loss_a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)
         b, oob_loss_b = self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
 
-        return a + b, oob_loss_a + oob_loss_b
+        # Second Derivative C loss
+        # goal is to have more locallly consistent C movements to reduce the artifacting present in the
+        # image
+        C_x_first = C[:, :, :, :-1] - C[:, :, :, 1:]
+        C_y_first = C[:, :, :-1, :] - C[:, :, 1:, :]
+
+        C_x_second = C_x_first[:, :, :, :-1] - C_x_first[:, :, :, 1:]
+        C_y_second = C_y_first[:, :, :-1, :] - C_y_first[:, :, 1:, :]
+
+        roughness_loss = (torch.mean(C_x_second) + torch.mean(C_y_second)) * 0.01
+
+        return a + b, oob_loss_a + oob_loss_b + roughness_loss
 
