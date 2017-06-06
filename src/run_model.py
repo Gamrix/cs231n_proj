@@ -175,6 +175,9 @@ class TextureLoss(torch.nn.Module):
     """
     Texture Loss is a L2 loss that also penalizes for deltas (textures) over various distances.
     """
+    def __init__(self, texture_loss_weight=0.25):
+        self.texture_loss_weight = self.texture_loss_weight
+
     def forward(self, y_pred, y_true):
         loss = self.l2_loss(y_pred, y_true)
         text_loss = 0
@@ -183,8 +186,7 @@ class TextureLoss(torch.nn.Module):
             text_loss += self.l2_loss(self.delta_x(y_pred, dist), self.delta_x(y_true, dist))
             text_loss += self.l2_loss(self.delta_y(y_pred, dist), self.delta_y(y_true, dist))
 
-        texture_loss_weight = 0.25
-        return loss + texture_loss_weight * text_loss
+        return loss + self.texture_loss_weight * text_loss
 
     @staticmethod
     def delta_x(image, offset):
@@ -207,7 +209,7 @@ def run_model(train_data, val_data, test_data):
 
     #model = EncodeDecodeDirect().type(dtype)
     
-    loss_fn = L2Loss()
+    loss_fn = TextureLoss()
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
 
