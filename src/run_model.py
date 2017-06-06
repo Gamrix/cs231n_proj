@@ -177,6 +177,7 @@ class TextureLoss(torch.nn.Module):
     """
     def __init__(self, texture_loss_weight=0.25):
         self.texture_loss_weight = texture_loss_weight
+        super(TextureLoss, self).__init__()
 
     def forward(self, y_pred, y_true):
         loss = self.l2_loss(y_pred, y_true)
