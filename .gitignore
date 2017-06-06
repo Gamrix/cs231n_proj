@@ -6,6 +6,8 @@ __pycache__/
 *$py.class
 baseline/eval/**
 src/preprocess/**
+!src/preprocess/*.py
+!src/preprocess/*.txt
 *.npy
 #src/eval/**
 
