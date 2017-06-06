@@ -198,8 +198,9 @@ class TextureLoss(torch.nn.Module):
 
     @staticmethod
     def l2_loss(y_pred, y_true):
+        N = y_pred.size()[0]
         diffsq = (y_pred - y_true) **2
-        return torch.mean(torch.sum(diffsq.view((-1, 224*224*3)), dim=1))
+        return torch.mean(torch.sum(diffsq.view((N, -1)), dim=1))
 
 def run_model(train_data, val_data, test_data):
     model = nn.Sequential (
