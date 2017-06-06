@@ -29,7 +29,7 @@ BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 1
 
-NUM_EPOCHS = 1000
+NUM_EPOCHS = 1500
 DROPOUT = 0.15
 INIT_LR = 1e-4
 is_local = False
@@ -116,6 +116,7 @@ def make_loaders(inputs, gold):
 
 def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
     losses=[]
+    eval_losses=[]
     for epoch in range(num_epochs):
         print('Starting epoch %d / %d...' % (epoch + 1, num_epochs))
         model.train()
@@ -127,16 +128,18 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             
             loss = loss_fn(scores, y_var)
             losses.append(loss.data[0])
-            if (t + 1) % PRINT_EVERY == 0:
-                print('\ttraining: t = %d, loss = %.4f' % (t + 1, loss.data[0]))
-            if (t) % 50 == 0:
-                evaluate(model, val_data, loss_fn)
+            #if (t + 1) % PRINT_EVERY == 0:
+            print('\ttraining: t = %d, loss = %.4f' % (t + 1, loss.data[0]))
+            #if (t) % 50 == 0:
+            eval_loss = evaluate(model, val_data, loss_fn)
+            eval_losses.append(eval_loss)
 
             optimizer.zero_grad()
             (loss + oob_loss).backward()
             optimizer.step()
     
-    np.save('losses', np.array(losses))
+    np.save('losses2', np.array(losses))
+    np.save('eval_losses2', np.array(eval_losses))
 
 def evaluate(model, dev_data, loss_fn, save=False):
     print("Running evaluation...")
@@ -160,6 +163,7 @@ def evaluate(model, dev_data, loss_fn, save=False):
         total_loss += loss_fn(scores, y_var).data[0]
 
     print("Total eval loss: %.4f, Avg eval loss: %.4f" % (total_loss, total_loss / NUM_VAL))
+    return total_loss
 
 
 class L2Loss(torch.nn.Module):
