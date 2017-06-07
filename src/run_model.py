@@ -22,17 +22,22 @@ from encodedecode import EncodeDecode
 from viewmorphing import ViewMorphing
 from directgen import EncodeDecodeDirect
 
-NUM_TRAIN = 64#16000
+NUM_TRAIN = 16000
 NUM_VAL = 16
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 1
 
-NUM_EPOCHS = 1500
+NUM_EPOCHS = 2 
 DROPOUT = 0.15
 INIT_LR = 1e-4
 is_local = False
+
+overfit_small=False
+if overfit_small:
+    NUM_TRAIN=64
+    NUM_EPOCHS = 1500
 
 dtype=torch.cuda.FloatTensor
 #dtype=torch.FloatTensor
@@ -108,8 +113,10 @@ def make_loaders(inputs, gold):
     gold_t = torch.from_numpy(gold).byte()
     dataset = TensorDataset(inputs_t, gold_t)
 
-    train = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_TRAIN, 0+15500))
-    val = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_VAL, NUM_TRAIN+15500))
+    offset= 15500 if overfit_small else 0
+
+    train = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_TRAIN, 0+offset))
+    val = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_VAL, NUM_TRAIN+offset))
     test = None # For now
 
     return train, val, test
@@ -214,7 +221,7 @@ def run_model(train_data, val_data, test_data):
     loss_fn = TextureLoss()
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
-
+    
     train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS) 
     #evaluate(model, val_data, loss_fn, save=True)
     evaluate(model, train_data, loss_fn, save=True)

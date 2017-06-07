@@ -87,7 +87,7 @@ class ViewMorphing(nn.Module):
         C_x_second = C_x_first[:, :, :, :-1] - C_x_first[:, :, :, 1:]
         C_y_second = C_y_first[:, :, :-1, :] - C_y_first[:, :, 1:, :]
 
-        roughness_loss = (torch.mean(C_x_second) + torch.mean(C_y_second)) * 0.01
+        # roughness_loss = (torch.mean(C_x_second) + torch.mean(C_y_second)) * 0.01
 
-        return a + b, oob_loss_a + oob_loss_b + roughness_loss
+        return a + b, oob_loss_a + oob_loss_b
 
