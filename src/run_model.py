@@ -27,7 +27,7 @@ NUM_VAL = 16
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
-PRINT_EVERY = 10
+PRINT_EVERY = 20
 
 NUM_EPOCHS = 2
 DROPOUT = 0.15
@@ -38,6 +38,7 @@ overfit_small = False
 if overfit_small:
     NUM_TRAIN = 64
     NUM_EPOCHS = 1500
+    PRINT_EVERY = 1
 
 dtype=torch.cuda.FloatTensor
 #dtype=torch.FloatTensor
@@ -134,9 +135,9 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             scores, oob_loss = model(x_var)
             
             loss = loss_fn(scores, y_var)
-            #if (t + 1) % PRINT_EVERY == 0:
-            print('\ttraining: t = %d, loss = %.4f' % (t + 1, loss.data[0]))
-            if (t) % 50 == 0 or overfit_small:
+            if (t + 1) % PRINT_EVERY == 0:
+                print('\ttraining: t = %d, loss = %.4f' % (t + 1, loss.data[0]))
+            if (t) % 100 == 0 or overfit_small:
                 eval_loss = evaluate(model, val_data, loss_fn)
                 eval_losses.append(eval_loss)
 
@@ -149,13 +150,14 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
 
 def evaluate(model, dev_data, loss_fn, save=False):
     print("Running evaluation...")
-    total_loss = 0.0
+    all_loss = []
     model.eval()
     length = len(dev_data)
     for t, (x, y) in enumerate(dev_data):
         x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
-        
+        baseline_img = (x_var[:, :3,] + x_var[:, 3:])/2
+
         scores = model(x_var)[0]
         if (t == length-1 and save):
             for i in range(NUM_SAVED_SAMPLES):
@@ -165,10 +167,13 @@ def evaluate(model, dev_data, loss_fn, save=False):
                 x = x_var[i].data.cpu().numpy()
                 imsave(name + "orig_0.png", x[:3,:,:])
                 imsave(name + "orig_1.png", x[3:,:,:])
-        
-        total_loss += loss_fn(scores, y_var).data[0]
 
-    print("Total eval loss: %.4f, Avg eval loss: %.4f" % (total_loss, total_loss / NUM_VAL))
+        our_loss = loss_fn(scores, y_var).data[0]
+        baseline_loss = loss_fn(baseline_img, y_var).data[0]
+        all_loss.append(our_loss / baseline_loss)
+
+    total_loss = sum(all_loss) / len(all_loss)
+    print("Avg eval loss: %.4f" % (total_loss,))
     return total_loss
 
 
