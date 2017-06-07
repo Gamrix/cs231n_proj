@@ -149,6 +149,10 @@ def calculate_norm_loss(x_var, y_var, pred_y, loss_fn):
     baseline_loss = loss_fn(baseline_img, y_var).data[0]
     return our_loss/ baseline_loss
 
+def convert_and_save(name, img):
+    """ Convert a gpu tensor into an image and save it"""
+    imsave(name, np.transpose(denorm(img.data.cpu().numpy()), axes=[1,2,0]))
+
 def evaluate(model, dev_data, loss_fn, save=False):
     print("Running evaluation...")
 
@@ -167,8 +171,9 @@ def evaluate(model, dev_data, loss_fn, save=False):
         if (t == length-1 and save):
             for i in range(NUM_SAVED_SAMPLES):
                 name = "./eval/{}_{}_".format(t, i)
-                imsave(name + "gen.png", np.transpose(denorm(scores[i].data.cpu().numpy()), axes=[1,2,0]))
-                imsave(name + "gold.png", np.transpose(denorm(y_var[i].data.cpu().numpy()), axes=[1,2,0]))
+                convert_and_save(name + "gen.png", scores[i])
+                convert_and_save(name + "gold.png", y_var[i])
+                # convert_and_save(name + "__Cx.png", )
                 x = x_var[i].data.cpu().numpy()
                 imsave(name + "orig_0.png", x[:3,:,:])
                 imsave(name + "orig_1.png", x[3:,:,:])
@@ -238,16 +243,18 @@ def run_model(train_data, val_data, test_data):
         evaluate(model, val_data, loss_fn, save=True)
 
 def main():
-    print ("Loading dataset...")
+    print("Loading dataset...")
     inputs, gold = load_dataset()
-    print ("Making loaders...")
+    print("Making loaders...")
     train_data, val, test = make_loaders(inputs, gold)
-    print ("Beginning to run model...")
+    print("Beginning to run model...")
     run_model(train_data, val, test)
 
 if __name__ == "__main__":
     import logging
     logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
-    logging.getLogger().addHandler(logging.FileHandler("model_perf.log"))
+    file_handler = logging.FileHandler("model_perf.log")
+    file_handler.setFormatter(logging.Formatter(format='%(asctime)s    %(message)s', datefmt='%I:%M:%S'))
+    logging.getLogger().addHandler(file_handler)
     print = logging.info
     main()

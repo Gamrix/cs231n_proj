@@ -70,6 +70,7 @@ class ViewMorphing(nn.Module):
 
     def forward(self, arglist):
         im1, im2, C, M1, M2 = arglist
+        # self.C, self.M1, self.M2 = C, M1, M2  # for evaluation logging purposes
         Cflat = self.flatten(C)
         #print(Cflat.mean())
         #print("max: {} \n min: {}".format(Cflat.max(), Cflat.min()))
