@@ -151,9 +151,14 @@ def calculate_norm_loss(x_var, y_var, pred_y, loss_fn):
 
 def evaluate(model, dev_data, loss_fn, save=False):
     print("Running evaluation...")
-    all_loss = []
+
     model.eval()
     length = len(dev_data)
+
+    # loss metrics
+    l2_loss_fn = L2Loss()
+    all_loss = []
+    l2_losses = []
     for t, (x, y) in enumerate(dev_data):
         x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
@@ -169,9 +174,11 @@ def evaluate(model, dev_data, loss_fn, save=False):
                 imsave(name + "orig_1.png", x[3:,:,:])
 
         all_loss.append(calculate_norm_loss(x_var, y_var, scores, loss_fn))
+        l2_losses.append(calculate_norm_loss(x_var, y_var, scores, l2_loss_fn))
 
     total_loss = sum(all_loss) / len(all_loss)
-    print("Avg eval loss: %.4f" % (total_loss,))
+    total_l2_loss = sum(l2_losses) / len(l2_losses)
+    print("Eval norm l2 loss: %.4f, norm total loss: %.4f" % (total_l2_loss, total_loss))
     return total_loss
 
 
