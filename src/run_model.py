@@ -254,7 +254,7 @@ if __name__ == "__main__":
     import logging
     logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
     file_handler = logging.FileHandler("model_perf.log")
-    file_handler.setFormatter(logging.Formatter(format='%(asctime)s    %(message)s', datefmt='%I:%M:%S'))
+    file_handler.setFormatter(logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%I:%M:%S'))
     logging.getLogger().addHandler(file_handler)
     print = logging.info
     main()
