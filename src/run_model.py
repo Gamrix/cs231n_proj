@@ -2,20 +2,14 @@ from __future__ import print_function, division
 
 import glob
 import os
+import numpy as np
 from scipy.misc import imread, imsave
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
-from torch.utils.data import DataLoader
-from torch.utils.data import TensorDataset
-from torch.utils.data import sampler
-
-import torchvision.datasets as dset
-import torchvision.transforms as T
-
-import numpy as np
+from torch.utils.data import DataLoader, TensorDataset, sampler
 
 from normalizer import normalize, denorm
 from encodedecode import EncodeDecode
@@ -136,7 +130,8 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             
             loss = loss_fn(scores, y_var)
             if (t + 1) % PRINT_EVERY == 0:
-                print('\ttraining: t = %d, loss = %.4f' % (t + 1, loss.data[0]))
+                norm_loss = calculate_norm_loss(x_var, y_var, scores, loss_fn)
+                print('\ttraining: t = %d, loss = %.4f, norm_loss= %.4f' % (t + 1, loss.data[0], norm_loss))
             if (t) % 100 == 0 or overfit_small:
                 eval_loss = evaluate(model, val_data, loss_fn)
                 eval_losses.append(eval_loss)
@@ -148,6 +143,12 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
     np.save('losses2', np.array(losses))
     np.save('eval_losses2', np.array(eval_losses))
 
+def calculate_norm_loss(x_var, y_var, pred_y, loss_fn):
+    baseline_img = (x_var[:, :3,] + x_var[:, 3:])/2
+    our_loss = loss_fn(pred_y, y_var).data[0]
+    baseline_loss = loss_fn(baseline_img, y_var).data[0]
+    return our_loss/ baseline_loss
+
 def evaluate(model, dev_data, loss_fn, save=False):
     print("Running evaluation...")
     all_loss = []
@@ -156,7 +157,6 @@ def evaluate(model, dev_data, loss_fn, save=False):
     for t, (x, y) in enumerate(dev_data):
         x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
-        baseline_img = (x_var[:, :3,] + x_var[:, 3:])/2
 
         scores = model(x_var)[0]
         if (t == length-1 and save):
@@ -168,9 +168,7 @@ def evaluate(model, dev_data, loss_fn, save=False):
                 imsave(name + "orig_0.png", x[:3,:,:])
                 imsave(name + "orig_1.png", x[3:,:,:])
 
-        our_loss = loss_fn(scores, y_var).data[0]
-        baseline_loss = loss_fn(baseline_img, y_var).data[0]
-        all_loss.append(our_loss / baseline_loss)
+        all_loss.append(calculate_norm_loss(x_var, y_var, scores, loss_fn))
 
     total_loss = sum(all_loss) / len(all_loss)
     print("Avg eval loss: %.4f" % (total_loss,))
