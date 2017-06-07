@@ -17,7 +17,7 @@ from viewmorphing import ViewMorphing
 from directgen import EncodeDecodeDirect
 
 NUM_TRAIN = 16000
-NUM_VAL = 64 
+NUM_VAL = 32
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
