@@ -17,15 +17,15 @@ from viewmorphing import ViewMorphing
 from directgen import EncodeDecodeDirect
 
 NUM_TRAIN = 16000
-NUM_VAL = 16
+NUM_VAL = 64 
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
 
-NUM_EPOCHS = 2
+NUM_EPOCHS = 10
 DROPOUT = 0.15
-INIT_LR = 5e-4
+INIT_LR = 2e-4
 is_local = False
 
 overfit_small = False
