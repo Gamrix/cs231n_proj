@@ -246,4 +246,8 @@ def main():
     run_model(train_data, val, test)
 
 if __name__ == "__main__":
+    import logging
+    logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
+    logging.getLogger().addHandler(logging.FileHandler("model_perf.log"))
+    print = logging.info
     main()
