@@ -27,16 +27,16 @@ NUM_VAL = 16
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
-PRINT_EVERY = 1
+PRINT_EVERY = 10
 
-NUM_EPOCHS = 2 
+NUM_EPOCHS = 2
 DROPOUT = 0.15
-INIT_LR = 1e-4
+INIT_LR = 5e-4
 is_local = False
 
-overfit_small=False
+overfit_small = False
 if overfit_small:
-    NUM_TRAIN=64
+    NUM_TRAIN = 64
     NUM_EPOCHS = 1500
 
 dtype=torch.cuda.FloatTensor
@@ -134,12 +134,11 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             scores, oob_loss = model(x_var)
             
             loss = loss_fn(scores, y_var)
-            losses.append(loss.data[0])
             #if (t + 1) % PRINT_EVERY == 0:
             print('\ttraining: t = %d, loss = %.4f' % (t + 1, loss.data[0]))
-            #if (t) % 50 == 0:
-            eval_loss = evaluate(model, val_data, loss_fn)
-            eval_losses.append(eval_loss)
+            if (t) % 50 == 0 or overfit_small:
+                eval_loss = evaluate(model, val_data, loss_fn)
+                eval_losses.append(eval_loss)
 
             optimizer.zero_grad()
             (loss + oob_loss).backward()
@@ -222,17 +221,19 @@ def run_model(train_data, val_data, test_data):
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
     
-    train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS) 
-    #evaluate(model, val_data, loss_fn, save=True)
-    evaluate(model, train_data, loss_fn, save=True)
+    train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS)
+    if overfit_small:
+        evaluate(model, train_data, loss_fn, save=True)
+    else:
+        evaluate(model, val_data, loss_fn, save=True)
 
 def main():
     print ("Loading dataset...")
     inputs, gold = load_dataset()
     print ("Making loaders...")
-    train, val, test = make_loaders(inputs, gold)
+    train_data, val, test = make_loaders(inputs, gold)
     print ("Beginning to run model...")
-    run_model(train, val, test)
+    run_model(train_data, val, test)
 
 if __name__ == "__main__":
     main()
