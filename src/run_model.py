@@ -28,11 +28,15 @@ DROPOUT = 0.15
 INIT_LR = 4e-4
 is_local = False
 
-overfit_small = False
+overfit_small = True#False
 if overfit_small:
     NUM_TRAIN = 64
-    NUM_EPOCHS = 1500
+    NUM_EPOCHS = 10#1500
     PRINT_EVERY = 1
+
+from time import gmtime, strftime
+#NAME=strftime("%Y-%m-%d-%H:%M:%S", gmtime())
+NAME="_overfitting"
 
 dtype=torch.cuda.FloatTensor
 #dtype=torch.FloatTensor
@@ -140,8 +144,8 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             (loss + oob_loss).backward()
             optimizer.step()
     
-    np.save('losses2', np.array(losses))
-    np.save('eval_losses2', np.array(eval_losses))
+    np.save('losses/losses'+NAME, np.array(losses))
+    np.save('losses/eval_losses'+NAME, np.array(eval_losses))
 
 def calculate_norm_loss(x_var, y_var, pred_y, loss_fn):
     baseline_img = (x_var[:, :3,] + x_var[:, 3:])/2
@@ -242,6 +246,8 @@ def run_model(train_data, val_data, test_data):
     else:
         evaluate(model, val_data, loss_fn, save=True)
 
+    torch.save(model, 'models/model'+NAME+'.dat')
+
 def main():
     print("Loading dataset...")
     inputs, gold = load_dataset()
@@ -253,7 +259,7 @@ def main():
 if __name__ == "__main__":
     import logging
     logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
-    file_handler = logging.FileHandler("model_perf.log")
+    file_handler = logging.FileHandler("logs/model_perf"+NAME+".log")
     file_handler.setFormatter(logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%I:%M:%S'))
     logging.getLogger().addHandler(file_handler)
     print = logging.info
