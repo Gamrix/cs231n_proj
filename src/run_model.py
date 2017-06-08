@@ -145,7 +145,8 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             optimizer.zero_grad()
             (loss + oob_loss).backward()
             optimizer.step()
-    
+
+    os.makedirs("losses", exist_ok=True)
     np.save('losses/losses'+NAME, np.array(losses))
     np.save('losses/eval_losses'+NAME, np.array(eval_losses))
 
@@ -266,7 +267,9 @@ def main():
 if __name__ == "__main__":
     import logging
     logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
-    file_handler = logging.FileHandler("logs/model_perf"+NAME+".log")
+
+    curtime = strftime("%Y-%m-%d--%H:%M:%S", gmtime())
+    file_handler = logging.FileHandler("logs/model_perf"+NAME + curtime+".log")
     file_handler.setFormatter(logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%I:%M:%S'))
     logging.getLogger().addHandler(file_handler)
     print = logging.info
