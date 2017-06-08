@@ -23,22 +23,21 @@ BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
 
-NUM_EPOCHS = 20 
+NUM_EPOCHS = 15 
 DROPOUT = 0.15
 INIT_LR = 4e-4
 is_local = False
+NAME=""
 
 overfit_small = False
 if overfit_small:
     NUM_TRAIN = 64
     NUM_EPOCHS = 1500
     PRINT_EVERY = 1
+    NAME="_overfitting"
 
 from time import gmtime, strftime
 #NAME=strftime("%Y-%m-%d-%H:%M:%S", gmtime())
-#NAME="_overfitting"
-NAME="_full"
-
 dtype=torch.cuda.FloatTensor
 #dtype=torch.FloatTensor
 
@@ -208,7 +207,7 @@ class TextureLoss(torch.nn.Module):
     """
     Texture Loss is a L2 loss that also penalizes for deltas (textures) over various distances.
     """
-    def __init__(self, texture_loss_weight=0.25):
+    def __init__(self, texture_loss_weight=2):
         self.texture_loss_weight = texture_loss_weight
         super(TextureLoss, self).__init__()
 
