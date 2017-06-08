@@ -9,6 +9,7 @@ src/preprocess/**
 !src/preprocess/*.py
 !src/preprocess/*.txt
 *.npy
+*.dat
 #src/eval/**
 
 # C extensions
