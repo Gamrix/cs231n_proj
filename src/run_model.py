@@ -31,7 +31,7 @@ is_local = False
 overfit_small = True#False
 if overfit_small:
     NUM_TRAIN = 64
-    NUM_EPOCHS = 10#1500
+    NUM_EPOCHS = 1500
     PRINT_EVERY = 1
 
 from time import gmtime, strftime
@@ -135,6 +135,7 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             loss = loss_fn(scores, y_var)
             if (t + 1) % PRINT_EVERY == 0:
                 norm_loss = calculate_norm_loss(x_var, y_var, scores, loss_fn)
+                losses.append(norm_loss)
                 print('\ttraining: t = %d, loss = %.4f, norm_loss= %.4f' % (t + 1, loss.data[0], norm_loss))
             if (t) % 100 == 0 or overfit_small:
                 eval_loss = evaluate(model, val_data, loss_fn)
