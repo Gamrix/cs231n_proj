@@ -66,7 +66,7 @@ class ViewMorphing(nn.Module):
         oob_loss = torch.mean((qi_rescale - qi) ** 2) / self.image_dim ** 2 * 0.01
         res_img = res_img_flat.view_as(image)
 
-        return res_img * mask.expand_as(res_img), oob_loss
+        return res_img, res_img * mask.expand_as(res_img), oob_loss
 
     def forward(self, arglist):
         im1, im2, C, M1, M2 = arglist
@@ -76,8 +76,8 @@ class ViewMorphing(nn.Module):
         #print("max: {} \n min: {}".format(Cflat.max(), Cflat.min()))
         # cflat is supposed to be between -1 and 1
 
-        a, oob_loss_a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)
-        b, oob_loss_b = self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
+        res_imga, a, oob_loss_a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)
+        res_imgb, b, oob_loss_b = self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
 
         # Second Derivative C loss
         # goal is to have more locallly consistent C movements to reduce the artifacting present in the
@@ -90,5 +90,5 @@ class ViewMorphing(nn.Module):
 
         # roughness_loss = (torch.mean(C_x_second) + torch.mean(C_y_second)) * 0.01
 
-        return a + b, oob_loss_a + oob_loss_b
+        return a + b, oob_loss_a + oob_loss_b, C, M1, M2, res_imga, res_imgb
 

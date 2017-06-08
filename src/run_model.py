@@ -28,7 +28,7 @@ DROPOUT = 0.15
 INIT_LR = 4e-4
 is_local = False
 
-overfit_small = True#False
+overfit_small = False
 if overfit_small:
     NUM_TRAIN = 64
     NUM_EPOCHS = 1500
@@ -36,7 +36,8 @@ if overfit_small:
 
 from time import gmtime, strftime
 #NAME=strftime("%Y-%m-%d-%H:%M:%S", gmtime())
-NAME="_overfitting"
+#NAME="_overfitting"
+NAME="_full"
 
 dtype=torch.cuda.FloatTensor
 #dtype=torch.FloatTensor
@@ -130,7 +131,7 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
             y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
             
-            scores, oob_loss = model(x_var)
+            scores, oob_loss, _, _, _, _, _ = model(x_var)
             
             loss = loss_fn(scores, y_var)
             if (t + 1) % PRINT_EVERY == 0:
@@ -172,12 +173,17 @@ def evaluate(model, dev_data, loss_fn, save=False):
         x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
 
-        scores = model(x_var)[0]
+        scores, _, C, M1, M2, res_img1, res_img2 = model(x_var)
         if (t == length-1 and save):
             for i in range(NUM_SAVED_SAMPLES):
-                name = "./eval/{}_{}_".format(t, i)
+                name = "./full_eval/{}_{}_".format(t, i)
                 convert_and_save(name + "gen.png", scores[i])
                 convert_and_save(name + "gold.png", y_var[i])
+                convert_and_save(name + "resgen1.png", res_img1[i])
+                convert_and_save(name + "resgen2.png", res_img2[i])
+                np.save(name + 'C', C.data.cpu().numpy())
+                np.save(name + 'M1', M1.data.cpu().numpy())
+                np.save(name + 'M2', M2.data.cpu().numpy())
                 # convert_and_save(name + "__Cx.png", )
                 x = x_var[i].data.cpu().numpy()
                 imsave(name + "orig_0.png", x[:3,:,:])
