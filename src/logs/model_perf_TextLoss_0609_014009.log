@@ -1,0 +1,234 @@
+01:40:09    Loading dataset...
+01:40:09    Reading cached numpy data in from file...
+01:40:18    Making loaders...
+01:40:18    Beginning to run model...
+01:40:21    Starting epoch 1 / 12...
+01:40:23    Running evaluation...
+01:40:24    Eval norm l2 loss: 1.0045, norm total loss: 1.0061
+01:41:52    	training: t = 20, loss = 216922.9844, norm_loss= 0.9893
+01:43:25    	training: t = 40, loss = 70412.3672, norm_loss= 0.9712
+01:44:58    	training: t = 60, loss = 86406.7656, norm_loss= 0.9669
+01:46:30    	training: t = 80, loss = 72478.9219, norm_loss= 0.9946
+01:48:03    	training: t = 100, loss = 17034.0078, norm_loss= 1.1597
+01:48:08    Running evaluation...
+01:48:09    Eval norm l2 loss: 0.9620, norm total loss: 0.9561
+01:49:36    	training: t = 120, loss = 192410.1875, norm_loss= 0.9560
+01:51:09    	training: t = 140, loss = 217020.4844, norm_loss= 0.9277
+01:52:42    	training: t = 160, loss = 245714.8281, norm_loss= 0.9131
+01:54:14    	training: t = 180, loss = 251012.5312, norm_loss= 0.9322
+01:55:47    	training: t = 200, loss = 225914.5938, norm_loss= 0.9119
+01:55:52    Running evaluation...
+01:55:53    Eval norm l2 loss: 0.9565, norm total loss: 0.9402
+01:57:21    	training: t = 220, loss = 210999.3594, norm_loss= 0.9010
+01:58:54    	training: t = 240, loss = 217445.1094, norm_loss= 0.8813
+01:59:43    Starting epoch 2 / 12...
+01:59:45    Running evaluation...
+01:59:45    Eval norm l2 loss: 0.7676, norm total loss: 0.7792
+02:01:13    	training: t = 20, loss = 197640.0938, norm_loss= 0.9013
+02:02:46    	training: t = 40, loss = 64578.8203, norm_loss= 0.8907
+02:04:18    	training: t = 60, loss = 76812.4766, norm_loss= 0.8595
+02:05:51    	training: t = 80, loss = 49825.1016, norm_loss= 0.6837
+02:07:23    	training: t = 100, loss = 14450.7041, norm_loss= 0.9839
+02:07:28    Running evaluation...
+02:07:29    Eval norm l2 loss: 0.8220, norm total loss: 0.8251
+02:08:57    	training: t = 120, loss = 159455.5000, norm_loss= 0.7923
+02:10:29    	training: t = 140, loss = 179196.2656, norm_loss= 0.7660
+02:12:02    	training: t = 160, loss = 214418.2969, norm_loss= 0.7968
+02:13:34    	training: t = 180, loss = 192333.9062, norm_loss= 0.7143
+02:15:07    	training: t = 200, loss = 181005.8906, norm_loss= 0.7306
+02:15:11    Running evaluation...
+02:15:12    Eval norm l2 loss: 0.7805, norm total loss: 0.7516
+02:16:40    	training: t = 220, loss = 184845.5469, norm_loss= 0.7893
+02:18:13    	training: t = 240, loss = 180568.0469, norm_loss= 0.7318
+02:19:02    Starting epoch 3 / 12...
+02:19:04    Running evaluation...
+02:19:05    Eval norm l2 loss: 0.6848, norm total loss: 0.6741
+02:20:33    	training: t = 20, loss = 159053.0938, norm_loss= 0.7253
+02:22:05    	training: t = 40, loss = 58018.1992, norm_loss= 0.8002
+02:23:38    	training: t = 60, loss = 59735.8164, norm_loss= 0.6684
+02:25:10    	training: t = 80, loss = 40985.5664, norm_loss= 0.5624
+02:26:43    	training: t = 100, loss = 11840.6895, norm_loss= 0.8062
+02:26:47    Running evaluation...
+02:26:48    Eval norm l2 loss: 0.6921, norm total loss: 0.6993
+02:28:16    	training: t = 120, loss = 134186.7031, norm_loss= 0.6667
+02:29:49    	training: t = 140, loss = 149478.8750, norm_loss= 0.6390
+02:31:22    	training: t = 160, loss = 164146.6719, norm_loss= 0.6100
+02:32:54    	training: t = 180, loss = 161268.4531, norm_loss= 0.5989
+02:34:26    	training: t = 200, loss = 164702.9062, norm_loss= 0.6648
+02:34:31    Running evaluation...
+02:34:32    Eval norm l2 loss: 0.7354, norm total loss: 0.7126
+02:36:00    	training: t = 220, loss = 164175.4688, norm_loss= 0.7011
+02:37:34    	training: t = 240, loss = 154344.8281, norm_loss= 0.6255
+02:38:23    Starting epoch 4 / 12...
+02:38:25    Running evaluation...
+02:38:26    Eval norm l2 loss: 0.6070, norm total loss: 0.6026
+02:39:54    	training: t = 20, loss = 139428.8594, norm_loss= 0.6359
+02:41:28    	training: t = 40, loss = 50839.3867, norm_loss= 0.7012
+02:43:01    	training: t = 60, loss = 55713.1484, norm_loss= 0.6234
+02:44:34    	training: t = 80, loss = 37427.2227, norm_loss= 0.5136
+02:46:07    	training: t = 100, loss = 13610.3701, norm_loss= 0.9266
+02:46:12    Running evaluation...
+02:46:13    Eval norm l2 loss: 0.6909, norm total loss: 0.6859
+02:47:41    	training: t = 120, loss = 120821.0703, norm_loss= 0.6003
+02:49:15    	training: t = 140, loss = 130192.2578, norm_loss= 0.5565
+02:50:48    	training: t = 160, loss = 148603.7500, norm_loss= 0.5522
+02:52:21    	training: t = 180, loss = 147559.4688, norm_loss= 0.5480
+02:53:54    	training: t = 200, loss = 143843.2500, norm_loss= 0.5806
+02:53:59    Running evaluation...
+02:54:00    Eval norm l2 loss: 0.6081, norm total loss: 0.6089
+02:55:28    	training: t = 220, loss = 150169.7500, norm_loss= 0.6412
+02:57:02    	training: t = 240, loss = 141025.2812, norm_loss= 0.5715
+02:57:51    Starting epoch 5 / 12...
+02:57:53    Running evaluation...
+02:57:54    Eval norm l2 loss: 0.5610, norm total loss: 0.5582
+02:59:22    	training: t = 20, loss = 133107.3906, norm_loss= 0.6070
+03:00:55    	training: t = 40, loss = 50142.2578, norm_loss= 0.6916
+03:02:29    	training: t = 60, loss = 51385.7500, norm_loss= 0.5750
+03:04:02    	training: t = 80, loss = 34427.9180, norm_loss= 0.4724
+03:05:35    	training: t = 100, loss = 13815.2061, norm_loss= 0.9406
+03:05:40    Running evaluation...
+03:05:40    Eval norm l2 loss: 0.6383, norm total loss: 0.6476
+03:07:09    	training: t = 120, loss = 110481.2266, norm_loss= 0.5489
+03:08:42    	training: t = 140, loss = 123053.2344, norm_loss= 0.5260
+03:10:16    	training: t = 160, loss = 142145.9062, norm_loss= 0.5282
+03:11:49    	training: t = 180, loss = 140181.9688, norm_loss= 0.5206
+03:13:22    	training: t = 200, loss = 136177.8750, norm_loss= 0.5497
+03:13:27    Running evaluation...
+03:13:28    Eval norm l2 loss: 0.5892, norm total loss: 0.5842
+03:14:56    	training: t = 220, loss = 139848.6562, norm_loss= 0.5972
+03:16:30    	training: t = 240, loss = 133421.7344, norm_loss= 0.5407
+03:17:19    Starting epoch 6 / 12...
+03:17:21    Running evaluation...
+03:17:22    Eval norm l2 loss: 0.5076, norm total loss: 0.5221
+03:18:50    	training: t = 20, loss = 115193.1250, norm_loss= 0.5253
+03:20:24    	training: t = 40, loss = 47993.3125, norm_loss= 0.6620
+03:21:57    	training: t = 60, loss = 47363.8281, norm_loss= 0.5300
+03:23:30    	training: t = 80, loss = 34581.8945, norm_loss= 0.4746
+03:25:03    	training: t = 100, loss = 10624.7002, norm_loss= 0.7234
+03:25:08    Running evaluation...
+03:25:08    Eval norm l2 loss: 0.5936, norm total loss: 0.6105
+03:26:37    	training: t = 120, loss = 106877.0938, norm_loss= 0.5310
+03:28:10    	training: t = 140, loss = 111485.9141, norm_loss= 0.4766
+03:29:43    	training: t = 160, loss = 130511.7734, norm_loss= 0.4850
+03:31:17    	training: t = 180, loss = 130940.5156, norm_loss= 0.4863
+03:32:50    	training: t = 200, loss = 129861.1484, norm_loss= 0.5242
+03:32:55    Running evaluation...
+03:32:55    Eval norm l2 loss: 0.5688, norm total loss: 0.5568
+03:34:24    	training: t = 220, loss = 134694.4062, norm_loss= 0.5752
+03:35:57    	training: t = 240, loss = 129836.7344, norm_loss= 0.5262
+03:36:47    Starting epoch 7 / 12...
+03:36:49    Running evaluation...
+03:36:49    Eval norm l2 loss: 0.5108, norm total loss: 0.5090
+03:38:18    	training: t = 20, loss = 115796.4375, norm_loss= 0.5281
+03:39:51    	training: t = 40, loss = 45158.9766, norm_loss= 0.6229
+03:41:24    	training: t = 60, loss = 44986.8672, norm_loss= 0.5034
+03:42:57    	training: t = 80, loss = 33571.2656, norm_loss= 0.4607
+03:44:30    	training: t = 100, loss = 10987.7812, norm_loss= 0.7481
+03:44:35    Running evaluation...
+03:44:36    Eval norm l2 loss: 0.6097, norm total loss: 0.6061
+03:46:04    	training: t = 120, loss = 99053.4844, norm_loss= 0.4922
+03:47:38    	training: t = 140, loss = 121696.0000, norm_loss= 0.5202
+03:49:11    	training: t = 160, loss = 126782.8594, norm_loss= 0.4711
+03:50:44    	training: t = 180, loss = 125335.7109, norm_loss= 0.4655
+03:52:17    	training: t = 200, loss = 124342.7500, norm_loss= 0.5019
+03:52:22    Running evaluation...
+03:52:23    Eval norm l2 loss: 0.5119, norm total loss: 0.5249
+03:53:51    	training: t = 220, loss = 125332.6484, norm_loss= 0.5352
+03:55:25    	training: t = 240, loss = 127027.2891, norm_loss= 0.5148
+03:56:14    Starting epoch 8 / 12...
+03:56:16    Running evaluation...
+03:56:17    Eval norm l2 loss: 0.4844, norm total loss: 0.4968
+03:57:45    	training: t = 20, loss = 109821.4375, norm_loss= 0.5008
+03:59:18    	training: t = 40, loss = 44268.5742, norm_loss= 0.6106
+04:00:52    	training: t = 60, loss = 43107.8359, norm_loss= 0.4824
+04:02:25    	training: t = 80, loss = 32033.7812, norm_loss= 0.4396
+04:03:58    	training: t = 100, loss = 11606.9150, norm_loss= 0.7902
+04:04:03    Running evaluation...
+04:04:03    Eval norm l2 loss: 0.5742, norm total loss: 0.5937
+04:05:32    	training: t = 120, loss = 97248.8516, norm_loss= 0.4832
+04:07:05    	training: t = 140, loss = 107224.8359, norm_loss= 0.4584
+04:08:38    	training: t = 160, loss = 122891.1875, norm_loss= 0.4567
+04:10:11    	training: t = 180, loss = 120295.2500, norm_loss= 0.4468
+04:11:45    	training: t = 200, loss = 120051.6250, norm_loss= 0.4846
+04:11:49    Running evaluation...
+04:11:50    Eval norm l2 loss: 0.4960, norm total loss: 0.5138
+04:13:19    	training: t = 220, loss = 123470.8984, norm_loss= 0.5272
+04:14:52    	training: t = 240, loss = 122558.7891, norm_loss= 0.4967
+04:15:41    Starting epoch 9 / 12...
+04:15:43    Running evaluation...
+04:15:44    Eval norm l2 loss: 0.4667, norm total loss: 0.4782
+04:17:12    	training: t = 20, loss = 102035.0469, norm_loss= 0.4653
+04:18:45    	training: t = 40, loss = 41682.3359, norm_loss= 0.5749
+04:20:19    	training: t = 60, loss = 41334.2148, norm_loss= 0.4625
+04:21:52    	training: t = 80, loss = 30787.9727, norm_loss= 0.4225
+04:23:24    	training: t = 100, loss = 10330.7119, norm_loss= 0.7034
+04:23:29    Running evaluation...
+04:23:30    Eval norm l2 loss: 0.5257, norm total loss: 0.5381
+04:24:58    	training: t = 120, loss = 97665.2344, norm_loss= 0.4853
+04:26:31    	training: t = 140, loss = 103060.2266, norm_loss= 0.4406
+04:28:04    	training: t = 160, loss = 121068.5469, norm_loss= 0.4499
+04:29:38    	training: t = 180, loss = 119280.3438, norm_loss= 0.4430
+04:31:11    	training: t = 200, loss = 117109.0234, norm_loss= 0.4727
+04:31:15    Running evaluation...
+04:31:16    Eval norm l2 loss: 0.4866, norm total loss: 0.5028
+04:32:45    	training: t = 220, loss = 120744.4609, norm_loss= 0.5156
+04:34:18    	training: t = 240, loss = 122836.4609, norm_loss= 0.4978
+04:35:07    Starting epoch 10 / 12...
+04:35:09    Running evaluation...
+04:35:10    Eval norm l2 loss: 0.4772, norm total loss: 0.4938
+04:36:38    	training: t = 20, loss = 106143.5938, norm_loss= 0.4841
+04:38:11    	training: t = 40, loss = 40058.2812, norm_loss= 0.5525
+04:39:44    	training: t = 60, loss = 36661.6094, norm_loss= 0.4102
+04:41:17    	training: t = 80, loss = 29740.1426, norm_loss= 0.4081
+04:42:50    	training: t = 100, loss = 10606.0410, norm_loss= 0.7221
+04:42:55    Running evaluation...
+04:42:56    Eval norm l2 loss: 0.5671, norm total loss: 0.5716
+04:44:24    	training: t = 120, loss = 95594.5000, norm_loss= 0.4750
+04:45:57    	training: t = 140, loss = 105868.1719, norm_loss= 0.4526
+04:47:30    	training: t = 160, loss = 120939.1328, norm_loss= 0.4494
+04:49:04    	training: t = 180, loss = 116670.3125, norm_loss= 0.4333
+04:50:37    	training: t = 200, loss = 118409.9531, norm_loss= 0.4779
+04:50:41    Running evaluation...
+04:50:42    Eval norm l2 loss: 0.4824, norm total loss: 0.4998
+04:52:11    	training: t = 220, loss = 121824.4219, norm_loss= 0.5202
+04:53:44    	training: t = 240, loss = 115343.7969, norm_loss= 0.4675
+04:54:33    Starting epoch 11 / 12...
+04:54:35    Running evaluation...
+04:54:36    Eval norm l2 loss: 0.4794, norm total loss: 0.5038
+04:56:04    	training: t = 20, loss = 102070.6328, norm_loss= 0.4655
+04:57:37    	training: t = 40, loss = 40407.8867, norm_loss= 0.5573
+04:59:10    	training: t = 60, loss = 37553.1719, norm_loss= 0.4202
+05:00:44    	training: t = 80, loss = 30329.0586, norm_loss= 0.4162
+05:02:17    	training: t = 100, loss = 10393.3506, norm_loss= 0.7076
+05:02:21    Running evaluation...
+05:02:22    Eval norm l2 loss: 0.5392, norm total loss: 0.5426
+05:03:51    	training: t = 120, loss = 89353.2891, norm_loss= 0.4440
+05:05:24    	training: t = 140, loss = 99198.1250, norm_loss= 0.4240
+05:06:57    	training: t = 160, loss = 113090.1250, norm_loss= 0.4203
+05:08:30    	training: t = 180, loss = 114324.2891, norm_loss= 0.4246
+05:10:03    	training: t = 200, loss = 116346.1953, norm_loss= 0.4696
+05:10:08    Running evaluation...
+05:10:09    Eval norm l2 loss: 0.4749, norm total loss: 0.4884
+05:11:37    	training: t = 220, loss = 123535.0156, norm_loss= 0.5275
+05:13:10    	training: t = 240, loss = 125167.3828, norm_loss= 0.5073
+05:14:00    Starting epoch 12 / 12...
+05:14:02    Running evaluation...
+05:14:03    Eval norm l2 loss: 0.4628, norm total loss: 0.4717
+05:15:31    	training: t = 20, loss = 102022.6406, norm_loss= 0.4653
+05:17:04    	training: t = 40, loss = 39294.6445, norm_loss= 0.5420
+05:18:37    	training: t = 60, loss = 34754.4727, norm_loss= 0.3889
+05:20:10    	training: t = 80, loss = 28498.4199, norm_loss= 0.3911
+05:21:43    	training: t = 100, loss = 9775.5498, norm_loss= 0.6656
+05:21:48    Running evaluation...
+05:21:49    Eval norm l2 loss: 0.4997, norm total loss: 0.5024
+05:23:17    	training: t = 120, loss = 86867.8438, norm_loss= 0.4316
+05:24:50    	training: t = 140, loss = 99918.6016, norm_loss= 0.4271
+05:26:24    	training: t = 160, loss = 110888.4375, norm_loss= 0.4121
+05:27:57    	training: t = 180, loss = 111353.4062, norm_loss= 0.4136
+05:29:30    	training: t = 200, loss = 108332.5625, norm_loss= 0.4373
+05:29:35    Running evaluation...
+05:29:35    Eval norm l2 loss: 0.4530, norm total loss: 0.4719
+05:31:04    	training: t = 220, loss = 119330.6016, norm_loss= 0.5096
+05:32:37    	training: t = 240, loss = 117501.6719, norm_loss= 0.4762
+05:33:26    Running evaluation...
+05:33:30    Eval norm l2 loss: 0.4445, norm total loss: 0.4580
