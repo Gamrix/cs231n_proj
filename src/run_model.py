@@ -23,7 +23,7 @@ BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
 
-NUM_EPOCHS = 15
+NUM_EPOCHS = 12 
 DROPOUT = 0.15
 INIT_LR = 4e-4
 is_local = False
@@ -252,7 +252,8 @@ def run_model(train_data, val_data, test_data):
         evaluate(model, train_data, loss_fn, save=True)
     else:
         evaluate(model, val_data, loss_fn, save=True)
-
+    
+    os.makedirs("models", exist_ok=True)
     torch.save(model, 'models/model'+NAME+'.dat')
 
 def main():
@@ -267,9 +268,14 @@ if __name__ == "__main__":
     import logging
     logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
 
-    curtime = strftime("%Y-%m-%d--%H:%M:%S", gmtime())
+    curtime = strftime("_%m%d_%I%M%S", gmtime())
     file_handler = logging.FileHandler("logs/model_perf"+NAME + curtime+".log")
     file_handler.setFormatter(logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%I:%M:%S'))
     logging.getLogger().addHandler(file_handler)
     print = logging.info
-    main()
+    try:
+        main()
+    except BaseException as e:
+        import traceback
+        logging.error(traceback.format_exc())
+        raise e
