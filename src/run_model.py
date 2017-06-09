@@ -23,22 +23,21 @@ BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
 
-NUM_EPOCHS = 20 
+NUM_EPOCHS = 12 
 DROPOUT = 0.15
 INIT_LR = 4e-4
 is_local = False
+NAME="_L2Loss"
 
 overfit_small = False
 if overfit_small:
     NUM_TRAIN = 64
     NUM_EPOCHS = 1500
     PRINT_EVERY = 1
+    NAME="_overfitting"
 
 from time import gmtime, strftime
 #NAME=strftime("%Y-%m-%d-%H:%M:%S", gmtime())
-#NAME="_overfitting"
-NAME="_full"
-
 dtype=torch.cuda.FloatTensor
 #dtype=torch.FloatTensor
 
@@ -177,7 +176,7 @@ def evaluate(model, dev_data, loss_fn, save=False):
         scores, _, C, M1, M2, res_img1, res_img2 = model(x_var)
         if (t == length-1 and save):
             for i in range(NUM_SAVED_SAMPLES):
-                name = "./full_eval/{}_{}_".format(t, i)
+                name = "./L2_eval/{}_{}_".format(t, i)
                 convert_and_save(name + "gen.png", scores[i])
                 convert_and_save(name + "gold.png", y_var[i])
                 convert_and_save(name + "resgen1.png", res_img1[i])
@@ -208,7 +207,7 @@ class TextureLoss(torch.nn.Module):
     """
     Texture Loss is a L2 loss that also penalizes for deltas (textures) over various distances.
     """
-    def __init__(self, texture_loss_weight=0.25):
+    def __init__(self, texture_loss_weight=2):
         self.texture_loss_weight = texture_loss_weight
         super(TextureLoss, self).__init__()
 
@@ -244,7 +243,7 @@ def run_model(train_data, val_data, test_data):
 
     #model = EncodeDecodeDirect().type(dtype)
     
-    loss_fn = TextureLoss()
+    loss_fn = L2Loss()#TextureLoss()
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
     
@@ -253,7 +252,8 @@ def run_model(train_data, val_data, test_data):
         evaluate(model, train_data, loss_fn, save=True)
     else:
         evaluate(model, val_data, loss_fn, save=True)
-
+    
+    os.makedirs("models", exist_ok=True)
     torch.save(model, 'models/model'+NAME+'.dat')
 
 def main():
@@ -268,7 +268,7 @@ if __name__ == "__main__":
     import logging
     logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
 
-    curtime = strftime("%Y-%m-%d--%H:%M:%S", gmtime())
+    curtime = strftime("_%m%d_%I%M%S", gmtime())
     file_handler = logging.FileHandler("logs/model_perf"+NAME + curtime+".log")
     file_handler.setFormatter(logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%I:%M:%S'))
     logging.getLogger().addHandler(file_handler)
