@@ -29,7 +29,7 @@ INIT_LR = 4e-4
 is_local = False
 NAME="_TextLoss"
 
-use_L2_loss = False
+use_L2_loss = True 
 if use_L2_loss:
     NAME="_L2Loss"
 
