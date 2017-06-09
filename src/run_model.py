@@ -23,11 +23,11 @@ BATCH_SIZE = 64
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
 
-NUM_EPOCHS = 15 
+NUM_EPOCHS = 15
 DROPOUT = 0.15
 INIT_LR = 4e-4
 is_local = False
-NAME=""
+NAME="_L2Loss"
 
 overfit_small = False
 if overfit_small:
@@ -176,7 +176,7 @@ def evaluate(model, dev_data, loss_fn, save=False):
         scores, _, C, M1, M2, res_img1, res_img2 = model(x_var)
         if (t == length-1 and save):
             for i in range(NUM_SAVED_SAMPLES):
-                name = "./full_eval/{}_{}_".format(t, i)
+                name = "./L2_eval/{}_{}_".format(t, i)
                 convert_and_save(name + "gen.png", scores[i])
                 convert_and_save(name + "gold.png", y_var[i])
                 convert_and_save(name + "resgen1.png", res_img1[i])
@@ -243,7 +243,7 @@ def run_model(train_data, val_data, test_data):
 
     #model = EncodeDecodeDirect().type(dtype)
     
-    loss_fn = TextureLoss()
+    loss_fn = L2Loss()#TextureLoss()
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
     
