@@ -27,14 +27,19 @@ NUM_EPOCHS = 12
 DROPOUT = 0.15
 INIT_LR = 4e-4
 is_local = False
-NAME="_L2Loss"
+NAME="_TextLoss"
+
+use_L2_loss = False
+if use_L2_loss:
+    NAME="_L2Loss"
+
 
 overfit_small = False
 if overfit_small:
     NUM_TRAIN = 64
     NUM_EPOCHS = 1500
     PRINT_EVERY = 1
-    NAME="_overfitting"
+    NAME +="_overfitting"
 
 from time import gmtime, strftime
 #NAME=strftime("%Y-%m-%d-%H:%M:%S", gmtime())
@@ -243,7 +248,9 @@ def run_model(train_data, val_data, test_data):
 
     #model = EncodeDecodeDirect().type(dtype)
     
-    loss_fn = L2Loss()#TextureLoss()
+    loss_fn = TextureLoss()
+    if use_L2_loss:
+        loss_fn = L2Loss()
     #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
     
