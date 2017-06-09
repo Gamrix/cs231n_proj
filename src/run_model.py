@@ -273,4 +273,9 @@ if __name__ == "__main__":
     file_handler.setFormatter(logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%I:%M:%S'))
     logging.getLogger().addHandler(file_handler)
     print = logging.info
-    main()
+    try:
+        main()
+    except BaseException as e:
+        import traceback
+        logging.error(traceback.format_exc())
+        raise e
