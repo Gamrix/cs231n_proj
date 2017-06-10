@@ -1,0 +1,26 @@
+12:42:48    Loading dataset...
+12:42:48    	On dir 0 of 141
+12:42:49    	On dir 1 of 141
+12:42:50    	On dir 2 of 141
+12:42:53    	On dir 3 of 141
+12:42:54    	On dir 4 of 141
+12:42:54    	On dir 5 of 141
+12:42:55    	On dir 6 of 141
+12:42:56    	On dir 7 of 141
+12:42:56    	On dir 8 of 141
+12:42:57    	On dir 9 of 141
+12:42:58    Traceback (most recent call last):
+  File "run_model.py", line 284, in <module>
+    main()
+  File "run_model.py", line 268, in main
+    inputs, gold = load_dataset()
+  File "run_model.py", line 102, in load_dataset
+    z = imread(zero)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/scipy/misc/pilutil.py", line 125, in imread
+    im = Image.open(name)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/PIL/Image.py", line 2276, in open
+    im = _open_core(fp, filename, prefix)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/PIL/Image.py", line 2263, in _open_core
+    factory, accept = OPEN[i]
+KeyboardInterrupt
+

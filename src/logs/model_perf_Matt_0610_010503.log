@@ -1,0 +1,34 @@
+01:05:03    Loading dataset...
+01:05:03    Reading cached numpy data in from file...
+01:05:07    Making loaders...
+01:05:07    Beginning to run model...
+01:05:09    Starting epoch 1 / 12...
+01:05:11    Running evaluation...
+01:05:12    Eval norm l2 loss: 0.9960, norm total loss: 0.9951
+01:05:34    	training: t = 20, loss = 171858.9219, norm_loss= 0.9600
+01:05:57    	training: t = 40, loss = 17677.0352, norm_loss= 1.0871
+01:06:18    Traceback (most recent call last):
+  File "run_model.py", line 284, in <module>
+    main()
+  File "run_model.py", line 272, in main
+    run_model(train_data, val, test)
+  File "run_model.py", line 257, in run_model
+    train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS)
+  File "run_model.py", line 138, in train
+    scores, oob_loss, _, _, _, _, _ = model(x_var)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/module.py", line 206, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/container.py", line 64, in forward
+    input = module(input)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/module.py", line 206, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/mvolk/cs231n_proj/src/viewmorphing.py", line 79, in forward
+    res_imga, a, oob_loss_a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)
+  File "/home/mvolk/cs231n_proj/src/viewmorphing.py", line 59, in get_masked_RP
+    self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].ceil()), dim=1), imflat) + \
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/autograd/variable.py", line 841, in cat
+    return Concat(dim)(*iterable)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/autograd/_functions/tensor.py", line 310, in forward
+    return torch.cat(inputs, self.dim)
+KeyboardInterrupt
+

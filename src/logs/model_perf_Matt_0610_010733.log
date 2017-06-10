@@ -1,0 +1,20 @@
+01:07:33    Loading dataset...
+01:07:33    Reading cached numpy data in from file...
+01:07:37    21715
+01:07:37    Making loaders...
+01:07:37    Beginning to run model...
+01:07:40    Traceback (most recent call last):
+  File "run_model.py", line 285, in <module>
+    main()
+  File "run_model.py", line 273, in main
+    run_model(train_data, val, test)
+  File "run_model.py", line 247, in run_model
+    ViewMorphing()
+  File "/home/mvolk/cs231n_proj/src/viewmorphing.py", line 30, in __init__
+    self.q = Variable(torch.from_numpy(q).type(dtype))
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/_utils.py", line 34, in _type
+    return new_type(self.size()).copy_(self, async)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/cuda/__init__.py", line 275, in __new__
+    return super(_CudaBase, cls).__new__(cls, *args, **kwargs)
+KeyboardInterrupt
+

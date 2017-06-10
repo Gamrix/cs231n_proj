@@ -1,0 +1,24 @@
+12:50:42    Loading dataset...
+12:50:42    Reading cached numpy data in from file...
+12:50:47    Making loaders...
+12:50:47    Beginning to run model...
+12:50:50    Starting epoch 1 / 12...
+12:50:55    Running evaluation...
+12:50:55    Eval norm l2 loss: 0.9971, norm total loss: 0.9971
+12:51:38    Traceback (most recent call last):
+  File "run_model.py", line 284, in <module>
+    main()
+  File "run_model.py", line 272, in main
+    run_model(train_data, val, test)
+  File "run_model.py", line 257, in run_model
+    train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS)
+  File "run_model.py", line 135, in train
+    x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/autograd/variable.py", line 232, in type
+    return Type(t)(self)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/autograd/_functions/tensor.py", line 141, in forward
+    return i.type(self.dest_type)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/_utils.py", line 34, in _type
+    return new_type(self.size()).copy_(self, async)
+KeyboardInterrupt
+

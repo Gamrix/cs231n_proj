@@ -1,0 +1,33 @@
+12:53:29    Loading dataset...
+12:53:29    Reading cached numpy data in from file...
+12:53:33    Making loaders...
+12:53:33    Beginning to run model...
+12:53:36    Starting epoch 1 / 12...
+12:53:39    Running evaluation...
+12:53:40    Traceback (most recent call last):
+  File "run_model.py", line 284, in <module>
+    main()
+  File "run_model.py", line 272, in main
+    run_model(train_data, val, test)
+  File "run_model.py", line 257, in run_model
+    train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS)
+  File "run_model.py", line 146, in train
+    eval_loss = evaluate(model, val_data, loss_fn)
+  File "run_model.py", line 181, in evaluate
+    scores, _, C, M1, M2, res_img1, res_img2 = model(x_var)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/module.py", line 206, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/container.py", line 64, in forward
+    input = module(input)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/module.py", line 206, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/mvolk/cs231n_proj/src/viewmorphing.py", line 80, in forward
+    res_imgb, b, oob_loss_b = self.get_masked_RP(im2, M2, self.q.expand_as(Cflat) - Cflat)
+  File "/home/mvolk/cs231n_proj/src/viewmorphing.py", line 59, in get_masked_RP
+    self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].ceil()), dim=1), imflat) + \
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/autograd/variable.py", line 841, in cat
+    return Concat(dim)(*iterable)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/autograd/_functions/tensor.py", line 310, in forward
+    return torch.cat(inputs, self.dim)
+RuntimeError: cuda runtime error (2) : out of memory at /b/wheel/pytorch-src/torch/lib/THC/generic/THCStorage.cu:66
+

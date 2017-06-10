@@ -1,0 +1,31 @@
+01:06:23    Loading dataset...
+01:06:23    Reading cached numpy data in from file...
+01:06:27    Making loaders...
+01:06:27    Beginning to run model...
+01:06:29    Starting epoch 1 / 12...
+01:06:31    Running evaluation...
+01:07:30    Traceback (most recent call last):
+  File "run_model.py", line 284, in <module>
+    try:
+  File "run_model.py", line 272, in main
+    print("Beginning to run model...")
+  File "run_model.py", line 257, in run_model
+  File "run_model.py", line 146, in train
+    if (t) % 100 == 0 or overfit_small:
+  File "run_model.py", line 181, in evaluate
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/module.py", line 206, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/container.py", line 64, in forward
+    input = module(input)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/module.py", line 206, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/mvolk/cs231n_proj/src/viewmorphing.py", line 79, in forward
+    res_imga, a, oob_loss_a = self.get_masked_RP(im1, M1, self.q.expand_as(Cflat) + Cflat)
+  File "/home/mvolk/cs231n_proj/src/viewmorphing.py", line 59, in get_masked_RP
+    self.get_pixel(qi, torch.cat((qi[:, 0:1].floor(), qi[:,1:2].ceil()), dim=1), imflat) + \
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/autograd/variable.py", line 841, in cat
+    return Concat(dim)(*iterable)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/autograd/_functions/tensor.py", line 310, in forward
+    return torch.cat(inputs, self.dim)
+KeyboardInterrupt
+

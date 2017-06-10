@@ -1,0 +1,29 @@
+12:59:45    Loading dataset...
+12:59:45    Reading cached numpy data in from file...
+12:59:49    21715
+12:59:49    Making loaders...
+12:59:49    Beginning to run model...
+12:59:52    Starting epoch 1 / 12...
+12:59:54    Traceback (most recent call last):
+  File "run_model.py", line 285, in <module>
+    main()
+  File "run_model.py", line 273, in main
+    run_model(train_data, val, test)
+  File "run_model.py", line 258, in run_model
+    train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS)
+  File "run_model.py", line 139, in train
+    scores, oob_loss, _, _, _, _, _ = model(x_var)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/module.py", line 206, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/container.py", line 64, in forward
+    input = module(input)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/nn/modules/module.py", line 206, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/mvolk/cs231n_proj/src/encodedecode.py", line 128, in forward
+    cd3ec3feature = torch.cat((cd3, ec3feature), dim=1)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/autograd/variable.py", line 841, in cat
+    return Concat(dim)(*iterable)
+  File "/home/cs231n/myVE35/lib/python3.5/site-packages/torch/autograd/_functions/tensor.py", line 310, in forward
+    return torch.cat(inputs, self.dim)
+KeyboardInterrupt
+
