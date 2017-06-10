@@ -17,9 +17,9 @@ from viewmorphing import ViewMorphing
 from directgen import EncodeDecodeDirect
 
 NUM_TRAIN = 16000
-NUM_VAL = 32
+NUM_VAL = 5696
 NUM_SAVED_SAMPLES = 16
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
 
@@ -27,9 +27,9 @@ NUM_EPOCHS = 12
 DROPOUT = 0.15
 INIT_LR = 4e-4
 is_local = False
-NAME="_TextLoss"
+NAME="_Matt"
 
-use_L2_loss = True 
+use_L2_loss = False 
 if use_L2_loss:
     NAME="_L2Loss"
 
@@ -80,6 +80,7 @@ def load_dataset():
         print ("Reading cached numpy data in from file...")
         inputs = np.load('saved_in_data.npy')
         ground_truths = np.load('saved_ground_truths.npy')
+        print (len(inputs))
         return inputs, ground_truths
 
     for i, dir in enumerate(os.listdir(DATA_DIR)):
