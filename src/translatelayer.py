@@ -44,9 +44,9 @@ class TranslateLayer(nn.Module):
 
         self.conv_condense = nn.Sequential(
             nn.Conv2d(ctrl_in_channels, 50, kernel_size=3, padding=1),
-            nn.ReLU(),
+            nn.Tanh(),
             # nn.BatchNorm2d(50),
-            nn.Conv2d(50, 18, kernel_size=3, padding=1)
+            nn.Conv2d(50, 16, kernel_size=3, padding=1)
         )
 
     def forward(self, image_pipe, ctrl_pipe):
@@ -94,12 +94,15 @@ class TranslateLayer(nn.Module):
         img_flat = img_res_2.view(-1, *img_res_2.size()[-2:])
 
         b, c, n_h, n_w = conv_condense_out.size()
-        translate = conv_condense_out.view(b, 2, 9, n_h, 1, n_w, 1).expand(b, 2, 9, n_h, cell_sz, n_w, cell_sz)
+        translate = conv_condense_out.view(b, 2, 8, n_h, 1, n_w, 1).expand(b, 2, 8, n_h, cell_sz, n_w, cell_sz)
         translate = translate.permute(0, 1, 3, 4, 5, 6, 2).clone()
-        translate = translate.view(b * 2 * n_h * cell_sz * n_w * cell_sz, 9, 1)
+        translate = translate.view(b * 2 * n_h * cell_sz * n_w * cell_sz, 8, 1)
+
+        center_transform = 1 - translate.sum(translate, axis=1, keepdim=True)
+        final_translate = torch.cat((translate[:, :4], center_transform, translate[:, 4:]), axis=1)
 
         # print(img_flat.size(), translate.size())
-        raw_res = torch.bmm(img_flat, translate)
+        raw_res = torch.bmm(img_flat, final_translate)
 
         # final result I want bat x 6 x h x w
         res_all = raw_res.view(b, 2, n_h* cell_sz, n_w * cell_sz, 3).permute(0, 1, 4, 2, 3).clone()
