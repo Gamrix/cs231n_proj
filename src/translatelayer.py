@@ -44,7 +44,7 @@ class TranslateLayer(nn.Module):
 
         self.conv_condense = nn.Sequential(
             nn.Conv2d(ctrl_in_channels, 50, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.BatchNorm2d(50),
             nn.Conv2d(50, 18, kernel_size=3, padding=1)
         )
@@ -121,10 +121,10 @@ class TranslateModel(nn.Module):
         self.ec2 = nn.Sequential(
             nn.Conv2d(6, 32, kernel_size=5, stride=2, padding=2),
             nn.BatchNorm2d(32),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Conv2d(32, 128, kernel_size=5, stride=2, padding=2),
             nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True))
+            nn.ReLU())
 
         # This results in 128 x 56 x 56  vector
 
@@ -132,14 +132,14 @@ class TranslateModel(nn.Module):
             return nn.Sequential(
                 nn.Conv2d(start_dim, end_dim, kernel_size=1, stride=1),
                 nn.BatchNorm2d(end_dim),
-                nn.ReLU(inplace=True))
+                nn.ReLU())
 
         def conv_squeeze(start_dim, end_dim):
             return nn.Sequential(
                 nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
                 nn.Conv2d(start_dim, end_dim, kernel_size=3, stride=1, padding=1),
                 nn.BatchNorm2d(end_dim),
-                nn.ReLU(inplace=True))
+                nn.ReLU())
 
         self.ec3 = conv_squeeze(128, 256)  # 256 x 28 x 28  cellsz: 8
         self.ec4 = conv_squeeze(256, 512)  # 512 x 14 x 14  cellsz: 16
@@ -147,10 +147,10 @@ class TranslateModel(nn.Module):
         self.ec6 = nn.Sequential(
             nn.Conv2d(512, 512, kernel_size=5, stride=2, padding=2),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(1024),
-            nn.ReLU(inplace=True))  # 1024 x 4 x 4
+            nn.ReLU())  # 1024 x 4 x 4
 
 
         # self.ec3feature = conv_relu(128, 64)
@@ -162,59 +162,59 @@ class TranslateModel(nn.Module):
         self.refeature = nn.Sequential(
             nn.Conv2d(6, 32, kernel_size=5, stride=2, padding=2),
             nn.BatchNorm2d(32),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Conv2d(64, 128, kernel_size=5, stride=2, padding=2),
             nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True))
+            nn.ReLU())
 
         self.refeature_final = nn.Sequential(
             nn.Conv2d(6, 32, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(32),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
         )
 
         self.cd6_2 = nn.Sequential(
             nn.Conv2d(1024 + 128, 1024, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(1024),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(1024),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
         )
 
         self.cd3_2 = nn.Sequential(
             nn.Conv2d(256 + 128, 256, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
         )
 
         self.cd5 = nn.Sequential(
                 nn.Conv2d(1024 + 128, 1024, kernel_size=3, stride=1, padding=1),
                 nn.BatchNorm2d(1024),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
                 nn.ConvTranspose2d(1024, 1024, kernel_size=4, stride=2, padding=1, dilation=2),
                 TrimLayer(),   # needed for the 7x7 matrix.
                 nn.BatchNorm2d(1024),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
             )
 
         def conv_transpose_conv(input_dim, output_dim):
             return nn.Sequential(
                 nn.Conv2d(input_dim, output_dim, kernel_size=3, stride=1, padding=1),
                 nn.BatchNorm2d(output_dim),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
                 nn.ConvTranspose2d(output_dim, output_dim, kernel_size=4, stride=2, padding=1, dilation=2),
                 nn.BatchNorm2d(output_dim),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
             )
 
         self.cd4 = conv_transpose_conv(1024 + 128, 512)
@@ -236,9 +236,9 @@ class TranslateModel(nn.Module):
         # To create the mask
         self.mask = nn.Sequential(
             nn.Conv2d(64 + 6, 16, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Conv2d(16, 1, kernel_size=3, stride=1, padding=1),
             nn.Sigmoid()
         )  # The other mask is just 1- mask
