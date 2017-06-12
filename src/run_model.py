@@ -132,10 +132,13 @@ def make_loaders(inputs, gold):
 def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
     losses=[]
     eval_losses=[]
+    optimizer = optim.Adam(model.parameters(), lr=INIT_LR / 10 ** -7)  # slow start (to prevent blowup
     for epoch in range(num_epochs):
         print('Starting epoch %d / %d...' % (epoch + 1, num_epochs))
         model.train()
         for t, (x, y) in enumerate(train_data):
+            if epoch == 1 and t == 10:
+                optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
             # print(t)
             x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
             y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
