@@ -44,7 +44,6 @@ if overfit_small:
 from time import gmtime, strftime
 #NAME=strftime("%Y-%m-%d-%H:%M:%S", gmtime())
 dtype=torch.cuda.FloatTensor
-torch.set_default_tensor_type(dtype)
 #dtype=torch.FloatTensor
 
 if os.path.exists("../john_local_flag.txt"):
@@ -56,6 +55,9 @@ if os.path.exists("../john_local_flag.txt"):
     NUM_TRAIN = 300
     NUM_VAL = 20
     NUM_SAVED_SAMPLES = 4  # needs to be less than or equal to batch size according to Matt
+    torch.set_default_tensor_type("torch.FloatTensor")
+else:
+    torch.set_default_tensor_type("torch.cuda.FloatTensor")
 
 class ChunkSampler(sampler.Sampler):
     """Samples elements sequentially from some offset. 
