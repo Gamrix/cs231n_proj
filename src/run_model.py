@@ -18,15 +18,15 @@ from viewmorphing import ViewMorphing
 from directgen import EncodeDecodeDirect
 
 NUM_TRAIN = 16000
-NUM_VAL = 512
+NUM_VAL = 256
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 8
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
 
-NUM_EPOCHS = 6 
+NUM_EPOCHS = 3
 DROPOUT = 0.15
-INIT_LR = 1e-4
+INIT_LR = 5e-5
 
 is_local = False
 NAME="_Matt"
@@ -137,7 +137,7 @@ def make_loaders(inputs, gold):
     offset = 15500 if overfit_small else 0
 
     train = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=RandomChunkSampler(NUM_TRAIN, 0+offset))
-    val = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_VAL, NUM_TRAIN+offset))
+    val = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_VAL, NUM_TRAIN+offset+1024))
     test = None # For now
 
     return train, val, test
