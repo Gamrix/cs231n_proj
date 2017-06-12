@@ -37,7 +37,7 @@ class TranslateLayer(nn.Module):
         # hate me all you want....
         # cell_size_base = len(bin(cell_size)) - bin(cell_size).rfind('1')
         # assert 2 ** cell_size_base == cell_size , "Cell size needs to be a power of 2"
-        assert cell_2_pow >= 2, "Not built for 1 pixel tranforms yet."
+        # assert cell_2_pow >= 2, "Not built for 1 pixel tranforms yet."
         self.cell_2_pow = cell_2_pow
         self.in_channels = ctrl_in_channels
 
@@ -98,7 +98,8 @@ class TranslateLayer(nn.Module):
         raw_res = torch.bmm(img_flat, translate)
 
         # final result I want bat x 3 x h x w
-        res = raw_res.view(b, n_h* cell_sz, n_w * cell_sz, 3).permute(0, 3, 1, 2)
+        res_all = raw_res.view(b, n_h* cell_sz, n_w * cell_sz, 3).permute(0, 3, 1, 2)
+        res = res_all[:, :, :img_H, :img_W]
         return res
 
 
@@ -106,74 +107,86 @@ class TranslateModel(nn.Module):
     def __init__(self):
         super(TranslateModel, self).__init__()
 
+        # Next thing: Implement batch norm
+
         self.ec3 = nn.Sequential(
             nn.Conv2d(6, 32, kernel_size=9, stride=1, padding=4),
+            nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),  # condense
             nn.Conv2d(32, 64, kernel_size=7, stride=1, padding=3),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),  # condense
             nn.Conv2d(64, 128, kernel_size=5, stride=1, padding=2),
+            nn.BatchNorm2d(128),
             nn.ReLU(inplace=True))
+
+        # This results in 128 x 56 x 56  vector
 
         def conv_relu(start_dim, end_dim):
             return nn.Sequential(
                 nn.Conv2d(start_dim, end_dim, kernel_size=1, stride=1),
+                nn.BatchNorm2d(end_dim),
                 nn.ReLU(inplace=True))
 
-        self.ec3feature = conv_relu(64, 128)
-
-        self.ec4 = nn.Sequential(
+        def conv_squeeze(start_dim, end_dim):
+            return nn.Sequential(
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(start_dim, end_dim, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True))
 
-        self.ec4feature = nn.Sequential(
-            nn.Conv2d(256, 128, kernel_size=1, stride=1),
-            nn.ReLU(inplace=True))
+        self.ec4 = conv_squeeze(128, 256)  # 256 x 28 x 28  cellsz: 8
+        self.ec5 = conv_squeeze(256, 512)  # 512 x 14 x 14  cellsz: 16
+        self.ec6 = conv_squeeze(512, 512)  # 512 x 7 x 7   cellsz: 32
+        self.ec7 = nn.Sequential(
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=2),
+            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(1024),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(1024),
+            nn.ReLU(inplace=True))  # 1024 x 4 x 4
 
-        self.ec5 = nn.Sequential(
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(inplace=True))
 
-        self.ec5feature = nn.Sequential(
-            nn.Conv2d(512, 256, kernel_size=1, stride=1),
-            nn.ReLU(inplace=True))
+        # self.ec3feature = conv_relu(128, 64)
+        # self.ec4feature = conv_relu(256, 128)
+        # self.ec5feature = conv_relu(512, 256)
+        # self.ec6feature = conv_relu(512, 256)
 
-        self.ec6 = nn.Sequential(
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            nn.Conv2d(512, 1024, kernel_size=1, stride=1),
-            nn.ReLU(inplace=True))
+        self.refeature = nn.Sequential(
+            nn.Conv2d(6, 32, kernel_size=5, stride=2, padding=2),
+            nn.BatchNorm2d(32),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 128, kernel_size=5, stride=2, padding=2),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),)
+
+        self.cd7_2 = nn.Sequential(
+            nn.Conv2d(1024 + 128, 1024, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+        )
+
+        self.cd6 = nn.Sequential(
+            nn.Conv2d(1024 + 128, 1024, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(1024, 1024, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True),
+        )  # result from this needs some trimming
 
         # To create the mask
-        self.vc3sig = nn.Sequential(
-            nn.Conv2d(1024, 1024, kernel_size=1, stride=1),
+        self.cd5 = nn.Sequential(
+            nn.Conv2d(1024 + 128, 1024, kernel_size=1, stride=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(1024, 1024, kernel_size=1, stride=1),
-            nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(1024, 512, kernel_size=4, stride=2, padding=1, dilation=2),
-            nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1, dilation=2),
-            nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1, dilation=2),
-            nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1, dilation=2),
-            nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1, dilation=2),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(32, 1, kernel_size=3, stride=1, padding=1),
-            nn.Sigmoid())
-
-        self.cd1 = nn.Sequential(
-            nn.Conv2d(1024, 2048, kernel_size=1, stride=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(2048, 2048, kernel_size=1, stride=1),
-            nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(2048, 768, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ConvTranspose2d(1024, 768, kernel_size=4, stride=2, padding=1, dilation=2),
             nn.ReLU(inplace=True))
 
-        self.cd2 = nn.Sequential(
+        self.cd4 = nn.Sequential(
             nn.ConvTranspose2d(1024, 384, kernel_size=4, stride=2, padding=1, dilation=2),
             nn.ReLU(inplace=True)
         )
@@ -196,18 +209,17 @@ class TranslateModel(nn.Module):
 
         # ec: Encode features (condensing of shape)
         # cd: Decode of features (uncondensing)
+        im0, im1 = im[:, :3], im[:, 3:]
 
         #concat = torch.cat((im1, im2), dim=1)
         ec3 = self.ec3(im)
-        #print(ec3.size())
         ec4 = self.ec4(ec3)
-        #print(ec4.size())
         ec5 = self.ec5(ec4)
-        #print(ec5.size())
         ec6 = self.ec6(ec5)
+        ec7 = self.ec7(ec6)  # cellsz: 64
 
-        M1 = self.vc3sig(ec6)
-        # already a sigmoid
+
+        im0 = ec7
 
         cd1 = self.cd1(ec6)
         ec5feature = self.ec5feature(ec5)

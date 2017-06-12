@@ -106,11 +106,11 @@ class EncodeDecode(nn.Module):
     def forward(self, im):
         #concat = torch.cat((im1, im2), dim=1)
         ec3 = self.ec3(im)
-        #print(ec3.size())
+        print("ec3:", ec3.size())
         ec4 = self.ec4(ec3)
-        #print(ec4.size())
+        print(ec4.size())
         ec5 = self.ec5(ec4)
-        #print(ec5.size())
+        print(ec5.size())
         ec6 = self.ec6(ec5)
 
         M1 = self.vc3sig(ec6)
