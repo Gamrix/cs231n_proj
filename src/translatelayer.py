@@ -29,7 +29,7 @@ import itertools
 
 class TranslateLayer(nn.Module):
 
-    def __init__(self, in_channels, cell_2_pow, stride=None, *args, **kwargs):
+    def __init__(self, ctrl_in_channels, cell_2_pow, stride=None, *args, **kwargs):
         if stride is None:
             stride = cell_2_pow
 
@@ -39,26 +39,14 @@ class TranslateLayer(nn.Module):
         # assert 2 ** cell_size_base == cell_size , "Cell size needs to be a power of 2"
         assert cell_2_pow >= 2, "Not built for 1 pixel tranforms yet."
         self.cell_2_pow = cell_2_pow
-        self.in_channels = in_channels
+        self.in_channels = ctrl_in_channels
 
-        layers = [
-            nn.Conv2d(in_channels, 18, kernel_size=5, stride=2, padding=2),
+        self.conv_condense = nn.Seqential(
+            nn.Conv2d(ctrl_in_channels, 50, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(18),
-            # nn.Dropout2d(p=DROPOUT),
-        ]
-
-        for i in range(cell_2_pow - 2):
-            layers += [
-                nn.Conv2d(18, 18, kernel_size=5, stride=2, padding=2),
-                nn.ReLU(inplace=True),
-                nn.BatchNorm2d(18),
-            ]
-
-        layers += [nn.Conv2d(18, 9, kernel_size=5, stride=2, padding=2),
-                   nn.Softmax2d()]
-        self.conv_condense = nn.Sequential(*layers)
-
+            nn.BatchNorm2d(50),
+            nn.Conv2d(50, 9, kernel_size=3, padding=1)
+        )
         super(TranslateLayer, self).__init__(*args, **kwargs)
 
     def forward(self, image_pipe, ctrl_pipe):
@@ -109,10 +97,133 @@ class TranslateLayer(nn.Module):
 
         raw_res = torch.bmm(img_flat, translate)
 
+        # final result I want bat x 3 x h x w
         res = raw_res.view(b, n_h* cell_sz, n_w * cell_sz, 3).permute(0, 3, 1, 2)
         return res
 
-        # final result I want bat x 3 x h x w
 
+class TranslateModel(nn.Module):
+    def __init__(self):
+        super(TranslateModel, self).__init__()
+
+        self.ec3 = nn.Sequential(
+            nn.Conv2d(6, 32, kernel_size=9, stride=1, padding=4),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(32, 64, kernel_size=7, stride=1, padding=3),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(64, 128, kernel_size=5, stride=1, padding=2),
+            nn.ReLU(inplace=True))
+
+        def conv_relu(start_dim, end_dim):
+            return nn.Sequential(
+                nn.Conv2d(start_dim, end_dim, kernel_size=1, stride=1),
+                nn.ReLU(inplace=True))
+
+        self.ec3feature = conv_relu(64, 128)
+
+        self.ec4 = nn.Sequential(
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True))
+
+        self.ec4feature = nn.Sequential(
+            nn.Conv2d(256, 128, kernel_size=1, stride=1),
+            nn.ReLU(inplace=True))
+
+        self.ec5 = nn.Sequential(
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True))
+
+        self.ec5feature = nn.Sequential(
+            nn.Conv2d(512, 256, kernel_size=1, stride=1),
+            nn.ReLU(inplace=True))
+
+        self.ec6 = nn.Sequential(
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(512, 1024, kernel_size=1, stride=1),
+            nn.ReLU(inplace=True))
+
+        # To create the mask
+        self.vc3sig = nn.Sequential(
+            nn.Conv2d(1024, 1024, kernel_size=1, stride=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(1024, 1024, kernel_size=1, stride=1),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(1024, 512, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(32, 1, kernel_size=3, stride=1, padding=1),
+            nn.Sigmoid())
+
+        self.cd1 = nn.Sequential(
+            nn.Conv2d(1024, 2048, kernel_size=1, stride=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(2048, 2048, kernel_size=1, stride=1),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(2048, 768, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True))
+
+        self.cd2 = nn.Sequential(
+            nn.ConvTranspose2d(1024, 384, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True)
+        )
+
+        self.cd3 = nn.Sequential(
+            nn.ConvTranspose2d(512, 192, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True)
+        )
+
+        self.cc3 = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1, dilation=2),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 2, kernel_size=3, stride=1, padding=1)
+        )
+
+
+    def forward(self, im):
+
+        # ec: Encode features (condensing of shape)
+        # cd: Decode of features (uncondensing)
+
+        #concat = torch.cat((im1, im2), dim=1)
+        ec3 = self.ec3(im)
+        #print(ec3.size())
+        ec4 = self.ec4(ec3)
+        #print(ec4.size())
+        ec5 = self.ec5(ec4)
+        #print(ec5.size())
+        ec6 = self.ec6(ec5)
+
+        M1 = self.vc3sig(ec6)
+        # already a sigmoid
+
+        cd1 = self.cd1(ec6)
+        ec5feature = self.ec5feature(ec5)
+        #print(cd1.size(), ec5.size(), ec5feature.size())
+        cd1ec5feature = torch.cat((cd1, ec5feature), dim=1)
+
+        cd2 = self.cd2(cd1ec5feature)
+        ec4feature = self.ec4feature(ec4)
+        cd2ec4feature = torch.cat((cd2, ec4feature), dim=1)
+
+        cd3 = self.cd3(cd2ec4feature)
+        ec3feature = self.ec3feature(ec3)
+        cd3ec3feature = torch.cat((cd3, ec3feature), dim=1)
+
+        C = self.cc3(cd3ec3feature)
+
+        return im[:,:3], im[:,3:], C, M1, (1 - M1)
 
 
