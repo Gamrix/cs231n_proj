@@ -44,6 +44,7 @@ if overfit_small:
 from time import gmtime, strftime
 #NAME=strftime("%Y-%m-%d-%H:%M:%S", gmtime())
 dtype=torch.cuda.FloatTensor
+torch.set_default_tensor_type(dtype)
 #dtype=torch.FloatTensor
 
 if os.path.exists("../john_local_flag.txt"):
