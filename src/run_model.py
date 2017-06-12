@@ -143,7 +143,7 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
         print('Starting epoch %d / %d...' % (epoch + 1, num_epochs))
         model.train()
         for t, (x, y) in enumerate(train_data):
-            if epoch == 1 and t == 10:
+            if epoch == 0 and t == 10:
                 optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
             # print(t)
             x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
@@ -156,7 +156,7 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
                 norm_loss = calculate_norm_loss(x_var, y_var, scores, loss_fn)
                 losses.append(norm_loss)
                 print('\ttraining: t = %d, loss = %.4f, norm_loss= %.4f' % (t + 1, loss.data[0], norm_loss))
-            if t % (len(train_data) // 4) == 0 or overfit_small:
+            if t % (len(train_data) // 8) == 0 or overfit_small:
                 eval_loss = evaluate(model, val_data, loss_fn)
                 eval_losses.append(eval_loss)
 
