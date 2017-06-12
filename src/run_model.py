@@ -25,11 +25,11 @@ PRINT_EVERY = 20
 
 NUM_EPOCHS = 6 
 DROPOUT = 0.15
-INIT_LR = 4e-6
+INIT_LR = 1e-5
 is_local = False
 NAME="_Matt"
 
-use_L2_loss = False 
+use_L2_loss = True
 if use_L2_loss:
     NAME="_L2Loss"
 
