@@ -26,15 +26,18 @@ PRINT_EVERY = 20
 NUM_EPOCHS = 6 
 DROPOUT = 0.15
 INIT_LR = 1e-5
+
 is_local = False
 NAME="_Matt"
 
+overfit_small = False
 use_L2_loss = True
+is_azure= True
+
 if use_L2_loss:
     NAME="_L2Loss"
 
 
-overfit_small = False
 if overfit_small:
     NUM_TRAIN = 64
     NUM_EPOCHS = 1500
@@ -110,9 +113,12 @@ def load_dataset():
 
     inputs, ground_truths = np.array(inputs), np.array(ground_truths)
 
-    print ("Caching numpy data for next run...")
-    np.save('saved_in_data.npy', inputs)
-    np.save('saved_ground_truths.npy', ground_truths)
+    if is_azure:
+        print("not saving vars due to disk constraints")
+    else:
+        print ("Caching numpy data for next run...")
+        np.save('saved_in_data.npy', inputs)
+        np.save('saved_ground_truths.npy', ground_truths)
 
     return inputs, ground_truths
 
