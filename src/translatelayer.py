@@ -98,7 +98,7 @@ class TranslateLayer(nn.Module):
         translate = translate.permute(0, 1, 3, 4, 5, 6, 2).clone()
         translate = translate.view(b * 2 * n_h * cell_sz * n_w * cell_sz, 9, 1)
 
-        print(img_flat.size(), translate.size())
+        # print(img_flat.size(), translate.size())
         raw_res = torch.bmm(img_flat, translate)
 
         # final result I want bat x 6 x h x w
@@ -269,7 +269,7 @@ class TranslateModel(nn.Module):
             # Yes, this works for the ec6 case
             min_img = F.avg_pool2d(new_im, scale_factor, stride=scale_factor)
             im_feat = self.refeature(min_img)
-            print(im_feat.size(), cur_cd.size())
+            # print(im_feat.size(), cur_cd.size())
             next_cd = torch.cat((im_feat, cur_cd), dim=1)
             cur_cd = cd_trans.forward(next_cd)
 
