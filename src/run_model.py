@@ -25,7 +25,7 @@ PRINT_EVERY = 20
 
 NUM_EPOCHS = 6 
 DROPOUT = 0.15
-INIT_LR = 4e-4
+INIT_LR = 4e-6
 is_local = False
 NAME="_Matt"
 
@@ -132,7 +132,7 @@ def make_loaders(inputs, gold):
 def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
     losses=[]
     eval_losses=[]
-    optimizer = optim.Adam(model.parameters(), lr=INIT_LR * 10 ** -7)  # slow start (to prevent blowup
+    optimizer = optim.Adam(model.parameters(), lr=INIT_LR * 10 ** -5)  # slow start (to prevent blowup
     for epoch in range(num_epochs):
         print('Starting epoch %d / %d...' % (epoch + 1, num_epochs))
         model.train()
