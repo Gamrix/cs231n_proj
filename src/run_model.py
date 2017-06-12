@@ -156,7 +156,7 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
                 norm_loss = calculate_norm_loss(x_var, y_var, scores, loss_fn)
                 losses.append(norm_loss)
                 print('\ttraining: t = %d, loss = %.4f, norm_loss= %.4f' % (t + 1, loss.data[0], norm_loss))
-            if (t) % 100 == 0 or overfit_small:
+            if t % (len(train_data) // 4) == 0 or overfit_small:
                 eval_loss = evaluate(model, val_data, loss_fn)
                 eval_losses.append(eval_loss)
 
