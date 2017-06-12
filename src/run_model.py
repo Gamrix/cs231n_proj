@@ -187,7 +187,7 @@ def evaluate(model, dev_data, loss_fn, save=False):
                 convert_and_save(name + "gold.png", y_var[i])
                 convert_and_save(name + "resgen1.png", res_img1[i])
                 convert_and_save(name + "resgen2.png", res_img2[i])
-                np.save(name + 'C', C.data.cpu().numpy())
+                # np.save(name + 'C', C.data.cpu().numpy())
                 np.save(name + 'M1', M1.data.cpu().numpy())
                 np.save(name + 'M2', M2.data.cpu().numpy())
                 # convert_and_save(name + "__Cx.png", )
@@ -242,10 +242,14 @@ class TextureLoss(torch.nn.Module):
         return torch.mean(torch.sum(diffsq.view((N, -1)), dim=1))
 
 def run_model(train_data, val_data, test_data):
-    model = nn.Sequential (
-        EncodeDecode(),
-        ViewMorphing()
-    ).type(dtype)
+    if False:
+        model = nn.Sequential (
+            EncodeDecode(),
+            ViewMorphing()
+        ).type(dtype)
+    else:
+        import translatelayer
+        model = translatelayer.TranslateModel()
 
     #model = EncodeDecodeDirect().type(dtype)
     

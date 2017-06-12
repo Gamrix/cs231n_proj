@@ -30,6 +30,7 @@ import itertools
 class TranslateLayer(nn.Module):
 
     def __init__(self, ctrl_in_channels, cell_2_pow, stride=None, *args, **kwargs):
+        super(TranslateLayer, self).__init__(*args, **kwargs)
         if stride is None:
             stride = cell_2_pow
 
@@ -41,13 +42,12 @@ class TranslateLayer(nn.Module):
         self.cell_2_pow = cell_2_pow
         self.in_channels = ctrl_in_channels
 
-        self.conv_condense = nn.Seqential(
+        self.conv_condense = nn.Sequential(
             nn.Conv2d(ctrl_in_channels, 50, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(50),
             nn.Conv2d(50, 18, kernel_size=3, padding=1)
         )
-        super(TranslateLayer, self).__init__(*args, **kwargs)
 
     def forward(self, image_pipe, ctrl_pipe):
         # will not concat img and ctrl pipes, another layer can do that
@@ -88,21 +88,29 @@ class TranslateLayer(nn.Module):
         # (bat x h x w x 2) x 3 x 9   orig image
         # (bat x h x w x 2) x 9 x 1   Filter
         # (bat x h x w x 2) x 3 x 1   res
-        img_res_2 = img_res.view(B, 2, 3, img_H, img_W, 9).permute(0, 1, 3, 4, 2, 5)
+
+        # clone there because .view needs a contiguous array.
+        img_res_2 = img_res.view(B, 2, 3, img_rH, img_rW, 9).permute(0, 1, 3, 4, 2, 5).clone()
         img_flat = img_res_2.view(-1, *img_res_2.size()[-2:])
 
         b, c, n_h, n_w = conv_condense_out.size()
-        translate = conv_condense_out.view(b, c, n_h, 1, n_w, 1).expand(b, c, n_h, cell_sz, n_w, cell_sz)
-        translate = translate.permute(0, 2, 3, 4, 5, 1).view(b * n_h * cell_sz, n_w * cell_sz, c, 1)
+        translate = conv_condense_out.view(b, 2, 9, n_h, 1, n_w, 1).expand(b, 2, 9, n_h, cell_sz, n_w, cell_sz)
+        translate = translate.permute(0, 1, 3, 4, 5, 6, 2).clone()
+        translate = translate.view(b * 2 * n_h * cell_sz * n_w * cell_sz, 9, 1)
 
+        print(img_flat.size(), translate.size())
         raw_res = torch.bmm(img_flat, translate)
 
         # final result I want bat x 6 x h x w
-        res_all = raw_res.view(b, 2, n_h* cell_sz, n_w * cell_sz, 3).permute(0, 1, 4, 2, 3)\
-            .view(b, 6, n_h* cell_sz, n_w * cell_sz)
+        res_all = raw_res.view(b, 2, n_h* cell_sz, n_w * cell_sz, 3).permute(0, 1, 4, 2, 3).clone()
+        res_all = res_all.view(b, 6, n_h* cell_sz, n_w * cell_sz)
         res = res_all[:, :, :img_H, :img_W]
         return res
 
+
+class TrimLayer(nn.Module):
+    def forward(self, img):
+        return img[:, :, :-1, :-1]
 
 class TranslateModel(nn.Module):
     def __init__(self):
@@ -137,11 +145,10 @@ class TranslateModel(nn.Module):
         self.ec4 = conv_squeeze(256, 512)  # 512 x 14 x 14  cellsz: 16
         self.ec5 = conv_squeeze(512, 512)  # 512 x 7 x 7   cellsz: 32
         self.ec6 = nn.Sequential(
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=2),
-            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(1024),
+            nn.Conv2d(512, 512, kernel_size=5, stride=2, padding=2),
+            nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
-            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(1024),
             nn.ReLU(inplace=True))  # 1024 x 4 x 4
 
@@ -181,23 +188,40 @@ class TranslateModel(nn.Module):
             nn.ReLU(inplace=True),
         )
 
+        self.cd3_2 = nn.Sequential(
+            nn.Conv2d(256 + 128, 256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+        )
+
+        self.cd5 = nn.Sequential(
+                nn.Conv2d(1024 + 128, 1024, kernel_size=3, stride=1, padding=1),
+                nn.BatchNorm2d(1024),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(1024, 1024, kernel_size=4, stride=2, padding=1, dilation=2),
+                TrimLayer(),   # needed for the 7x7 matrix.
+                nn.BatchNorm2d(1024),
+                nn.ReLU(inplace=True),
+            )
+
         def conv_transpose_conv(input_dim, output_dim):
             return nn.Sequential(
                 nn.Conv2d(input_dim, output_dim, kernel_size=3, stride=1, padding=1),
-                nn.BatchNorm2d(2 * output_dim),
+                nn.BatchNorm2d(output_dim),
                 nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(output_dim, output_dim, kernel_size=4, stride=2, padding=1, dilation=2),
                 nn.BatchNorm2d(output_dim),
                 nn.ReLU(inplace=True),
             )
 
-        self.cd5 = conv_transpose_conv(1024 + 128, 1024)  # result from this needs some trimming
         self.cd4 = conv_transpose_conv(1024 + 128, 512)
         self.cd3 = conv_transpose_conv(512 + 128, 256)
-        self.cd3_2 = conv_transpose_conv(256 + 128, 256)
         self.cd2 = conv_transpose_conv(256 + 128, 128)
-        self.cd1 = conv_transpose_conv(128 + 64, 128)
-        self.cd0 = conv_transpose_conv(128 + 64, 64)
+        self.cd1 = conv_transpose_conv(128 + 64, 64)
+        self.cd0 = conv_transpose_conv(64 + 64, 64)
 
         self.trans6 = TranslateLayer(1024, 6)
         self.trans6_2 = TranslateLayer(1024, 6)
@@ -206,12 +230,14 @@ class TranslateModel(nn.Module):
         self.trans3 = TranslateLayer(256, 3)
         self.trans3_2 = TranslateLayer(256, 3)
         self.trans2 = TranslateLayer(128, 2)
-        self.trans1 = TranslateLayer(128, 1)
+        self.trans1 = TranslateLayer(64, 1)
         self.trans0 = TranslateLayer(64, 0)
 
         # To create the mask
         self.mask = nn.Sequential(
-            nn.Conv2d(64, 16, kernel_size=1, stride=1, padding=0),
+            nn.Conv2d(64 + 6, 16, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(16, 1, kernel_size=3, stride=1, padding=1),
             nn.Sigmoid()
@@ -233,9 +259,9 @@ class TranslateModel(nn.Module):
 
         cur_cd = ec6
         new_im = im
-        groups = [(self.trans6, self.cd6_2, 6), (self.trans6_2, self.cd5, 5),
-                  (self.trans5, self.cd4, 4), (self.trans4, self.cd3, 3),
-                  (self.trans3, self.cd3_2, 3), (self.trans3_2, self.cd2, 2)]
+        groups = [(self.trans6, self.cd6_2, 6), (self.trans6_2, self.cd5, 6),
+                  (self.trans5, self.cd4, 5), (self.trans4, self.cd3, 4),
+                  (self.trans3, self.cd3_2, 3), (self.trans3_2, self.cd2, 3)]
 
         for img_trans, cd_trans, scale_f in groups:
             scale_factor = 2 ** (scale_f - 2)
@@ -243,27 +269,35 @@ class TranslateModel(nn.Module):
             # Yes, this works for the ec6 case
             min_img = F.avg_pool2d(new_im, scale_factor, stride=scale_factor)
             im_feat = self.refeature(min_img)
+            print(im_feat.size(), cur_cd.size())
             next_cd = torch.cat((im_feat, cur_cd), dim=1)
             cur_cd = cd_trans.forward(next_cd)
 
         # now the final translation layers
-        scale_factor = 2
+        scale_factor = 4
         new_im = self.trans2.forward(new_im, cur_cd)
         min_img = F.avg_pool2d(new_im, scale_factor, stride=scale_factor)
         im_feat = self.refeature_final(min_img)
         next_cd = torch.cat((im_feat, cur_cd), dim=1)
         cur_cd = self.cd1.forward(next_cd)
 
+        scale_factor = 2
         new_im = self.trans1.forward(new_im, cur_cd)
-        im_feat = self.refeature_final(new_im)
+        min_img = F.avg_pool2d(new_im, scale_factor, stride=scale_factor)
+        im_feat = self.refeature_final(min_img)
         next_cd = torch.cat((im_feat, cur_cd), dim=1)
         cur_cd = self.cd0.forward(next_cd)
 
         new_im = self.trans0.forward(new_im, cur_cd)
-        im_feat = self.refeature_final(new_im)
-        next_cd = torch.cat((im_feat, cur_cd), dim=1)
+        # im_feat = self.refeature_final(new_im)
+        next_cd = torch.cat((new_im, cur_cd), dim=1)
 
         M1 = self.mask.forward(next_cd)
-        return new_im[:,:3], new_im[:,3:], M1, (1 - M1)
+        im0, im1 = new_im[:, :3], new_im[:, 3:]
+        m1_e = M1.expand_as(im0)
+        res = im0 * m1_e + im1 * (1 - m1_e)
+
+        # match the interface of the encode_decode layer
+        return res, 0, 0, im0, im1, M1, (1 - M1)
 
 
