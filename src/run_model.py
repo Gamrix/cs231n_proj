@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import glob
 import os
 import numpy as np
+import random
 from scipy.misc import imread, imsave
 
 import torch
@@ -78,6 +79,12 @@ class ChunkSampler(sampler.Sampler):
     def __len__(self):
         return self.num_samples
 
+class RandomChunkSampler(ChunkSampler):
+    def __iter__(self):
+        iter_range = list(range(self.start, self.start + self.num_samples))
+        random.shuffle(iter_range)
+        return iter(iter_range)
+
 def load_dataset():
     ground_truths = []
     inputs = []
@@ -127,9 +134,9 @@ def make_loaders(inputs, gold):
     gold_t = torch.from_numpy(gold).byte()
     dataset = TensorDataset(inputs_t, gold_t)
 
-    offset= 15500 if overfit_small else 0
+    offset = 15500 if overfit_small else 0
 
-    train = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_TRAIN, 0+offset))
+    train = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=RandomChunkSampler(NUM_TRAIN, 0+offset))
     val = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_VAL, NUM_TRAIN+offset))
     test = None # For now
 
