@@ -98,8 +98,8 @@ class TranslateLayer(nn.Module):
         translate = translate.permute(0, 1, 3, 4, 5, 6, 2).clone()
         translate = translate.view(b * 2 * n_h * cell_sz * n_w * cell_sz, 8, 1)
 
-        center_transform = 1 - translate.sum(translate, dim=1, keepdim=True)
-        final_translate = torch.cat((translate[:, :4], center_transform, translate[:, 4:]), axis=1)
+        center_transform = 1 - torch.sum(translate, dim=1)
+        final_translate = torch.cat((translate[:, :4], center_transform, translate[:, 4:]), dim=1)
 
         # print(img_flat.size(), translate.size())
         raw_res = torch.bmm(img_flat, final_translate)
