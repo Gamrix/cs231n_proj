@@ -98,7 +98,7 @@ class TranslateLayer(nn.Module):
         translate = translate.permute(0, 1, 3, 4, 5, 6, 2).clone()
         translate = translate.view(b * 2 * n_h * cell_sz * n_w * cell_sz, 8, 1)
 
-        center_transform = 1 - translate.sum(translate, axis=1, keepdim=True)
+        center_transform = 1 - translate.sum(translate, dim=1, keepdim=True)
         final_translate = torch.cat((translate[:, :4], center_transform, translate[:, 4:]), axis=1)
 
         # print(img_flat.size(), translate.size())
