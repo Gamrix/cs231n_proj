@@ -136,6 +136,7 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
         print('Starting epoch %d / %d...' % (epoch + 1, num_epochs))
         model.train()
         for t, (x, y) in enumerate(train_data):
+            print(t)
             x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
             y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
             
