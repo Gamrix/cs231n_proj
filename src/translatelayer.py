@@ -123,10 +123,10 @@ class TranslateModel(nn.Module):
         # Next thing: Implement batch norm
 
         self.ec2 = nn.Sequential(
-            nn.Conv2d(6, 32, kernel_size=5, stride=2, padding=2),
+            nn.Conv2d(6, 16, kernel_size=5, stride=2, padding=2),
             # nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
-            nn.Conv2d(32, 128, kernel_size=5, stride=2, padding=2),
+            nn.Conv2d(16, 64, kernel_size=5, stride=2, padding=2),
             # nn.BatchNorm2d(128),
             nn.ReLU(inplace=True))
 
@@ -145,9 +145,9 @@ class TranslateModel(nn.Module):
                 # nn.BatchNorm2d(end_dim),
                 nn.ReLU(inplace=True))
 
-        self.ec3 = conv_squeeze(128, 256)  # 256 x 28 x 28  cellsz: 8
-        self.ec4 = conv_squeeze(256, 512)  # 512 x 14 x 14  cellsz: 16
-        self.ec5 = conv_squeeze(512, 512)  # 512 x 7 x 7   cellsz: 32
+        self.ec3 = conv_squeeze(64, 128)  # 256 x 28 x 28  cellsz: 8
+        self.ec4 = conv_squeeze(128, 256)  # 512 x 14 x 14  cellsz: 16
+        self.ec5 = conv_squeeze(256, 512)  # 512 x 7 x 7   cellsz: 32
         self.ec6 = nn.Sequential(
             nn.Conv2d(512, 512, kernel_size=5, stride=2, padding=2),
             # nn.BatchNorm2d(512),
@@ -227,7 +227,7 @@ class TranslateModel(nn.Module):
         self.cd3 = conv_transpose_conv(512 + 128, 256)
         self.cd2 = conv_transpose_conv(256 + 128, 128)
         self.cd1 = conv_transpose_conv(128 + 64, 64)
-        self.cd0 = conv_transpose_conv(64 + 64, 64)
+        self.cd0 = conv_transpose_conv(64 + 64, 32)
 
         self.trans6 = TranslateLayer(1024, 6)
         self.trans6_2 = TranslateLayer(1024, 6)
@@ -237,15 +237,15 @@ class TranslateModel(nn.Module):
         self.trans3_2 = TranslateLayer(256, 3)
         self.trans2 = TranslateLayer(128, 2)
         self.trans1 = TranslateLayer(64, 1)
-        self.trans0 = TranslateLayer(64, 0)
+        self.trans0 = TranslateLayer(32, 0)
 
         # To create the mask
         self.mask = nn.Sequential(
-            nn.Conv2d(64 + 6, 16, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(32 + 6, 16, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(16, 8, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(16, 1, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(8, 1, kernel_size=3, stride=1, padding=1),
             nn.Sigmoid()
         )  # The other mask is just 1- mask
 
