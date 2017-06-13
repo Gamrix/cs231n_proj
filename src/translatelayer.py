@@ -145,9 +145,9 @@ class TranslateModel(nn.Module):
                 # nn.BatchNorm2d(end_dim),
                 nn.ReLU(inplace=True))
 
-        self.ec3 = conv_squeeze(64, 256)  # 256 x 28 x 28  cellsz: 8
-        self.ec4 = conv_squeeze(256, 512)  # 512 x 14 x 14  cellsz: 16
-        self.ec5 = conv_squeeze(512, 512)  # 512 x 7 x 7   cellsz: 32
+        self.ec3 = conv_squeeze(64, 128)  # 256 x 28 x 28  cellsz: 8
+        self.ec4 = conv_squeeze(128, 256)  # 512 x 14 x 14  cellsz: 16
+        self.ec5 = conv_squeeze(256, 512)  # 512 x 7 x 7   cellsz: 32
         self.ec6 = nn.Sequential(
             nn.Conv2d(512, 512, kernel_size=5, stride=2, padding=2),
             # nn.BatchNorm2d(512),

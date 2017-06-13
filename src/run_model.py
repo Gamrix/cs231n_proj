@@ -20,7 +20,7 @@ from directgen import EncodeDecodeDirect
 
 NUM_TRAIN = 12000   # 16000
 NUM_VAL = 256
-NUM_SAVED_SAMPLES = 16
+NUM_SAVED_SAMPLES = 8
 BATCH_SIZE = 8
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
