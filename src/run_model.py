@@ -4,6 +4,7 @@ import glob
 import os
 import numpy as np
 import random
+import traceback
 from scipy.misc import imread, imsave
 
 import torch
@@ -24,9 +25,9 @@ BATCH_SIZE = 8
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
 
-NUM_EPOCHS = 3
+NUM_EPOCHS = 2
 DROPOUT = 0.15
-INIT_LR = 5e-5
+INIT_LR = 1.5e-4
 
 is_local = False
 NAME="_Matt"
@@ -163,7 +164,7 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
                 norm_loss = calculate_norm_loss(x_var, y_var, scores, loss_fn)
                 losses.append(norm_loss)
                 print('\ttraining: t = %d, loss = %.4f, norm_loss= %.4f' % (t + 1, loss.data[0], norm_loss))
-            if t % (len(train_data) // 16) == 0 or overfit_small:
+            if t % (len(train_data) // 8) == 0 or overfit_small:
                 eval_loss = evaluate(model, val_data, loss_fn)
                 eval_losses.append(eval_loss)
 
@@ -205,11 +206,18 @@ def evaluate(model, dev_data, loss_fn, save=False):
                 name = "./L2_eval/{}_{}_".format(t, i)
                 convert_and_save(name + "gen.png", scores[i])
                 convert_and_save(name + "gold.png", y_var[i])
-                convert_and_save(name + "resgen1.png", res_img1[i])
-                convert_and_save(name + "resgen2.png", res_img2[i])
+                try:
+                    convert_and_save(name + "resgen1.png", res_img1[i])
+                    convert_and_save(name + "resgen2.png", res_img2[i])
+                except Exception:
+                    print(traceback.format_exc())
+
                 # np.save(name + 'C', C.data.cpu().numpy())
-                np.save(name + 'M1', M1.data.cpu().numpy())
-                np.save(name + 'M2', M2.data.cpu().numpy())
+                try:
+                    np.save(name + 'M1', M1.data.cpu().numpy())
+                    np.save(name + 'M2', M2.data.cpu().numpy())
+                except Exception:
+                    print(traceback.format_exc())
                 # convert_and_save(name + "__Cx.png", )
                 x = x_var[i].data.cpu().numpy()
                 imsave(name + "orig_0.png", x[:3,:,:])
@@ -280,13 +288,21 @@ def run_model(train_data, val_data, test_data):
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
     
     train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS)
-    if overfit_small:
-        evaluate(model, train_data, loss_fn, save=True)
-    else:
-        evaluate(model, val_data, loss_fn, save=True)
-    
-    os.makedirs("models", exist_ok=True)
-    torch.save(model, 'models/model'+NAME+'.dat')
+
+    try:
+        os.makedirs("models", exist_ok=True)
+        torch.save(model, 'models/model'+NAME+'.dat')
+    except Exception:
+        print(traceback.format_exc())
+
+    try:
+        if overfit_small:
+            evaluate(model, train_data, loss_fn, save=True)
+        else:
+            evaluate(model, val_data, loss_fn, save=True)
+    except Exception:
+        print(traceback.format_exc())
+
 
 def main():
     print("Loading dataset...")

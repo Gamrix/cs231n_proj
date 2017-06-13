@@ -119,6 +119,7 @@ class TranslateModel(nn.Module):
     def __init__(self):
         super(TranslateModel, self).__init__()
 
+        drop_prob = 0.2
         # Next thing: Implement batch norm
 
         self.ec2 = nn.Sequential(
@@ -168,6 +169,7 @@ class TranslateModel(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
             # nn.BatchNorm2d(64),
+            nn.Dropout2d(p=drop_prob, inplace=True),
             nn.ReLU(inplace=True),
             nn.Conv2d(64, 128, kernel_size=5, stride=2, padding=2),
             # nn.BatchNorm2d(128),
@@ -215,6 +217,7 @@ class TranslateModel(nn.Module):
                 nn.Conv2d(input_dim, output_dim, kernel_size=3, stride=1, padding=1),
                 # nn.BatchNorm2d(output_dim),
                 nn.ReLU(inplace=True),
+                nn.Dropout2d(p=drop_prob, inplace=True),
                 nn.ConvTranspose2d(output_dim, output_dim, kernel_size=4, stride=2, padding=1, dilation=2),
                 # nn.BatchNorm2d(output_dim),
                 nn.ReLU(inplace=True),
@@ -301,6 +304,6 @@ class TranslateModel(nn.Module):
         res = im0 * m1_e + im1 * (1 - m1_e)
 
         # match the interface of the encode_decode layer
-        return res, 0, 0, im0, im1, M1, (1 - M1)
+        return res, 0, 0,  M1, (1 - M1), im0, im1,
 
 
