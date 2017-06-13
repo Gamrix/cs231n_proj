@@ -18,14 +18,14 @@ from encodedecode import EncodeDecode
 from viewmorphing import ViewMorphing
 from directgen import EncodeDecodeDirect
 
-NUM_TRAIN = 12000   # 16000
+NUM_TRAIN = 20000   # 16000
 NUM_VAL = 256
 NUM_SAVED_SAMPLES = 8
 BATCH_SIZE = 8
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
 
-NUM_EPOCHS = 2
+NUM_EPOCHS = 15
 DROPOUT = 0.15
 INIT_LR = 2e-4
 
@@ -39,6 +39,7 @@ is_azure= True
 if use_L2_loss:
     NAME="_L2Loss"
 
+NAME="Translate_Learn_Decay"
 
 if overfit_small:
     NUM_TRAIN = 64
@@ -150,6 +151,12 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
     for epoch in range(num_epochs):
         print('Starting epoch %d / %d...' % (epoch + 1, num_epochs))
         model.train()
+        if epoch == 6:
+            print("Lowering rate for refinement")
+            optimizer = optim.Adam(model.parameters(), lr=INIT_LR / 10)
+        if epoch == 11:
+            print("Lowering rate for refinement 2")
+            optimizer = optim.Adam(model.parameters(), lr=INIT_LR / 100)
         for t, (x, y) in enumerate(train_data):
             if epoch == 0 and t == 50:
                 optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
@@ -202,7 +209,7 @@ def evaluate(model, dev_data, loss_fn, save=False):
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
 
         scores, _, C, M1, M2, res_img1, res_img2 = model(x_var)
-        if (t == length-1 and save):
+        if (t >= length-2 and save):
             for i in range(NUM_SAVED_SAMPLES):
                 name = "./L2_eval/{}_{}_".format(t, i)
                 convert_and_save(name + "gen.png", scores[i])
@@ -318,11 +325,11 @@ def main():
 
 if __name__ == "__main__":
     import logging
-    logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%H:%M:%S', level=logging.INFO)
 
-    curtime = strftime("_%m%d_%I%M%S", gmtime())
+    curtime = strftime("_%m%d_%H%M%S", gmtime())
     file_handler = logging.FileHandler("logs/model_perf"+NAME + curtime+".log")
-    file_handler.setFormatter(logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%I:%M:%S'))
+    file_handler.setFormatter(logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%H:%M:%S'))
     logging.getLogger().addHandler(file_handler)
     print = logging.info
     try:
