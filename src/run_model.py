@@ -18,7 +18,7 @@ from encodedecode import EncodeDecode
 from viewmorphing import ViewMorphing
 from directgen import EncodeDecodeDirect
 
-NUM_TRAIN = 16000
+NUM_TRAIN = 12000   # 16000
 NUM_VAL = 256
 NUM_SAVED_SAMPLES = 16
 BATCH_SIZE = 8
@@ -27,7 +27,7 @@ PRINT_EVERY = 20
 
 NUM_EPOCHS = 2
 DROPOUT = 0.15
-INIT_LR = 1.5e-4
+INIT_LR = 2e-4
 
 is_local = False
 NAME="_Matt"
@@ -54,12 +54,12 @@ dtype=torch.cuda.FloatTensor
 if os.path.exists("../john_local_flag.txt"):
     # this is because my local machine can't handle the batch size...
     is_local = True
-    BATCH_SIZE = 4
+    BATCH_SIZE = 2
     NUM_EPOCHS = 1
     dtype = torch.FloatTensor
-    NUM_TRAIN = 300
-    NUM_VAL = 20
-    NUM_SAVED_SAMPLES = 4  # needs to be less than or equal to batch size according to Matt
+    NUM_TRAIN = 2
+    NUM_VAL = 2
+    NUM_SAVED_SAMPLES = 2  # needs to be less than or equal to batch size according to Matt
     torch.set_default_tensor_type("torch.FloatTensor")
 else:
     torch.set_default_tensor_type("torch.cuda.FloatTensor")
@@ -138,7 +138,7 @@ def make_loaders(inputs, gold):
     offset = 15500 if overfit_small else 0
 
     train = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=RandomChunkSampler(NUM_TRAIN, 0+offset))
-    val = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_VAL, NUM_TRAIN+offset+1024))
+    val = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_VAL, NUM_TRAIN+offset))
     test = None # For now
 
     return train, val, test
@@ -164,7 +164,7 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
                 norm_loss = calculate_norm_loss(x_var, y_var, scores, loss_fn)
                 losses.append(norm_loss)
                 print('\ttraining: t = %d, loss = %.4f, norm_loss= %.4f' % (t + 1, loss.data[0], norm_loss))
-            if t % (len(train_data) // 8) == 0 or overfit_small:
+            if not is_local and t % (len(train_data) // 8) == 0 or overfit_small:
                 eval_loss = evaluate(model, val_data, loss_fn)
                 eval_losses.append(eval_loss)
 
@@ -197,6 +197,7 @@ def evaluate(model, dev_data, loss_fn, save=False):
     all_loss = []
     l2_losses = []
     for t, (x, y) in enumerate(dev_data):
+        x_copy = np.copy(x.numpy())
         x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
         y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
 
@@ -219,9 +220,12 @@ def evaluate(model, dev_data, loss_fn, save=False):
                 except Exception:
                     print(traceback.format_exc())
                 # convert_and_save(name + "__Cx.png", )
-                x = x_var[i].data.cpu().numpy()
-                imsave(name + "orig_0.png", x[:3,:,:])
-                imsave(name + "orig_1.png", x[3:,:,:])
+                x_res = x_copy[i]
+                try:
+                    imsave(name + "orig_0.png", x_res[:,:,:3])
+                    imsave(name + "orig_1.png", x_res[:,:,3:])
+                except Exception:
+                    print(traceback.format_exc())
 
         all_loss.append(calculate_norm_loss(x_var, y_var, scores, loss_fn))
         l2_losses.append(calculate_norm_loss(x_var, y_var, scores, l2_loss_fn))
