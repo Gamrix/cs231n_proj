@@ -1,0 +1,13 @@
+09:13:06    Loading dataset...
+09:13:06    	On dir 0 of 161
+09:13:07    	On dir 1 of 161
+09:13:07    	On dir 2 of 161
+09:13:10    Traceback (most recent call last):
+  File "run_model.py", line 336, in <module>
+    main()
+  File "run_model.py", line 320, in main
+    inputs, gold = load_dataset()
+  File "run_model.py", line 121, in load_dataset
+    inputs.append(np.concatenate((z,o), axis=2))
+KeyboardInterrupt
+
