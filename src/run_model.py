@@ -5,10 +5,10 @@ import os
 import random
 from time import gmtime, strftime
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
 from scipy.misc import imread, imsave
 from torch.autograd import Variable
 from torch.utils.data import DataLoader, TensorDataset, sampler
@@ -19,7 +19,7 @@ from normalizer import normalize, denorm
 from viewmorphing import ViewMorphing
 
 # Setup information
-NUM_TRAIN = 20000   # 16000
+NUM_TRAIN = 20000  # 16000
 NUM_VAL = 256
 NUM_SAVED_SAMPLES = 8
 BATCH_SIZE = 8
@@ -45,7 +45,7 @@ if overfit_small:
     NUM_TRAIN = 64
     NUM_EPOCHS = 1500
     PRINT_EVERY = 1
-    NAME +="_overfitting"
+    NAME += "_overfitting"
 
 if os.path.exists("../john_local_flag.txt") or is_local:
     # this is because my local machine can't handle the batch size...
@@ -59,7 +59,7 @@ if os.path.exists("../john_local_flag.txt") or is_local:
     NUM_SAVED_SAMPLES = 2  # needs to be less than or equal to batch size according to Matt
     torch.set_default_tensor_type("torch.FloatTensor")
 else:
-    dtype=torch.cuda.FloatTensor
+    dtype = torch.cuda.FloatTensor
     torch.set_default_tensor_type("torch.cuda.FloatTensor")
 
 curtime = strftime("_%m%d_%H%M%S", gmtime())
@@ -74,7 +74,8 @@ class ChunkSampler(sampler.Sampler):
         num_samples: # of desired datapoints
         start: offset where we should start selecting from
     """
-    def __init__(self, num_samples, start = 0):
+
+    def __init__(self, num_samples, start=0):
         self.num_samples = num_samples
         self.start = start
 
@@ -113,7 +114,7 @@ def load_dataset():
         if not all(os.path.exists(f) for f in src_f): continue
         assert (len(src_f) % 3 == 0)
 
-        files = zip(*[iter(src_f)]*3)
+        files = zip(*[iter(src_f)] * 3)
         if is_local:
             files = list(files)[:50]
 
@@ -122,7 +123,7 @@ def load_dataset():
             z = imread(zero)
             o = imread(one)
             ground_truths.append(t)
-            inputs.append(np.concatenate((z,o), axis=2))
+            inputs.append(np.concatenate((z, o), axis=2))
 
     inputs, ground_truths = np.array(inputs), np.array(ground_truths)
 
@@ -135,6 +136,7 @@ def load_dataset():
 
     return inputs, ground_truths
 
+
 def make_loaders(inputs, gold):
     inputs_t = torch.from_numpy(inputs).byte()
     gold_t = torch.from_numpy(gold).byte()
@@ -142,16 +144,20 @@ def make_loaders(inputs, gold):
 
     offset = 15500 if overfit_small else 0
 
-    train = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=RandomChunkSampler(NUM_TRAIN, 0+offset))
-    val = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=ChunkSampler(NUM_VAL, NUM_TRAIN+offset))
-    test = None # For now
+    train = DataLoader(dataset, batch_size=BATCH_SIZE,
+                       sampler=RandomChunkSampler(NUM_TRAIN, 0 + offset))
+    val = DataLoader(dataset, batch_size=BATCH_SIZE,
+                     sampler=ChunkSampler(NUM_VAL, NUM_TRAIN + offset))
+    test = None  # For now
 
     return train, val, test
 
-def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
-    losses=[]
-    eval_losses=[]
-    optimizer = optim.Adam(model.parameters(), lr=INIT_LR * 10 ** -4)  # slow start (to prevent blowup
+
+def train(model, loss_fn, optimizer, train_data, val_data, num_epochs=1):
+    losses = []
+    eval_losses = []
+    optimizer = optim.Adam(model.parameters(),
+                           lr=INIT_LR * 10 ** -4)  # slow start (to prevent blowup
     for epoch in range(num_epochs):
         print('Starting epoch %d / %d...' % (epoch + 1, num_epochs))
         model.train()
@@ -165,8 +171,8 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             if epoch == 0 and t == 50:
                 optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
             # print(t)
-            x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
-            y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
+            x_var = Variable(normalize(x).permute(0, 3, 1, 2)).type(dtype)
+            y_var = Variable(normalize(y).permute(0, 3, 1, 2)).type(dtype)
 
             scores, oob_loss, _, _, _, _, _ = model(x_var)
 
@@ -174,7 +180,8 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             if (t + 1) % PRINT_EVERY == 0:
                 norm_loss = calculate_norm_loss(x_var, y_var, scores, loss_fn)
                 losses.append(norm_loss)
-                print('\ttraining: t = %d, loss = %.4f, norm_loss= %.4f' % (t + 1, loss.data[0], norm_loss))
+                print('\ttraining: t = %d, loss = %.4f, norm_loss= %.4f' % (
+                      t + 1, loss.data[0], norm_loss))
             if not is_local and t % (len(train_data) // 8) == 0 or overfit_small:
                 eval_loss = evaluate(model, val_data, loss_fn)
                 eval_losses.append(eval_loss)
@@ -184,18 +191,21 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             optimizer.step()
 
     os.makedirs("losses", exist_ok=True)
-    np.save(results_folder + 'losses'+NAME, np.array(losses))
-    np.save(results_folder +'losses/eval_losses'+NAME, np.array(eval_losses))
+    np.save(results_folder + 'losses' + NAME, np.array(losses))
+    np.save(results_folder + 'losses/eval_losses' + NAME, np.array(eval_losses))
+
 
 def calculate_norm_loss(x_var, y_var, pred_y, loss_fn):
-    baseline_img = (x_var[:, :3,] + x_var[:, 3:])/2
+    baseline_img = (x_var[:, :3, ] + x_var[:, 3:]) / 2
     our_loss = loss_fn(pred_y, y_var).data[0]
     baseline_loss = loss_fn(baseline_img, y_var).data[0]
-    return our_loss/ baseline_loss
+    return our_loss / baseline_loss
+
 
 def convert_and_save(name, img):
     """ Convert a gpu tensor into an image and save it"""
-    imsave(name, np.transpose(denorm(img.data.cpu().numpy()), axes=[1,2,0]))
+    imsave(name, np.transpose(denorm(img.data.cpu().numpy()), axes=[1, 2, 0]))
+
 
 def evaluate(model, dev_data, loss_fn, save=False):
     print("Running evaluation...")
@@ -209,11 +219,11 @@ def evaluate(model, dev_data, loss_fn, save=False):
     l2_losses = []
     for t, (x, y) in enumerate(dev_data):
         x_copy = np.copy(x.numpy())
-        x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
-        y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
+        x_var = Variable(normalize(x).permute(0, 3, 1, 2)).type(dtype)
+        y_var = Variable(normalize(y).permute(0, 3, 1, 2)).type(dtype)
 
         scores, _, C, M1, M2, res_img1, res_img2 = model(x_var)
-        if (t >= length-2 and save):
+        if (t >= length - 2 and save):
             extra = results_folder + "extra/"
             os.makedirs(extra, exist_ok=True)
             for i in range(NUM_SAVED_SAMPLES):
@@ -235,8 +245,8 @@ def evaluate(model, dev_data, loss_fn, save=False):
                 # convert_and_save(name + "__Cx.png", )
                 x_res = x_copy[i]
                 try:
-                    imsave(extra + "orig_0.png", x_res[:,:,:3])
-                    imsave(extra + "orig_1.png", x_res[:,:,3:])
+                    imsave(extra + "orig_0.png", x_res[:, :, :3])
+                    imsave(extra + "orig_1.png", x_res[:, :, 3:])
                 except Exception:
                     print(traceback.format_exc())
 
@@ -259,7 +269,7 @@ def run_model(train_data, val_data, test_data):
         import translatelayer
         model = translatelayer.TranslateModel()
 
-    #model = EncodeDecodeDirect().type(dtype)
+    # model = EncodeDecodeDirect().type(dtype)
 
     cur_loss_fn = loss_fns.TextureLoss2()
     if use_L2_loss:
@@ -269,7 +279,7 @@ def run_model(train_data, val_data, test_data):
     train(model, cur_loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS)
 
     try:
-        torch.save(model, results_folder + 'model'+NAME+'.dat')
+        torch.save(model, results_folder + 'model' + NAME + '.dat')
     except Exception:
         print(traceback.format_exc())
 
@@ -290,17 +300,22 @@ def main():
     print("Beginning to run model...")
     run_model(train_data, val, test)
 
+
 if __name__ == "__main__":
     import logging
-    logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%H:%M:%S', level=logging.INFO)
 
-    file_handler = logging.FileHandler(results_folder + "model_perf"+NAME + curtime+".log")
-    file_handler.setFormatter(logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%H:%M:%S'))
+    logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%H:%M:%S',
+                        level=logging.INFO)
+
+    file_handler = logging.FileHandler(results_folder + "model_perf" + NAME + curtime + ".log")
+    file_handler.setFormatter(
+        logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%H:%M:%S'))
     logging.getLogger().addHandler(file_handler)
     print = logging.info
     try:
         main()
     except BaseException as e:
         import traceback
+
         logging.error(traceback.format_exc())
         raise e

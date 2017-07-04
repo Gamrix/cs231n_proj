@@ -1,34 +1,26 @@
 from __future__ import print_function, division
 
-# Background:
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
+
+# Background:
 # Traditional CNN layers move information very slowly across the cnn
 # For video interpolation, we need data to travel 30-100 pixels
 # This kind of gradient without substantial information loss is
 # not possible with traditional CNN architectures
 # (or RNNs/LSTMs for that matter)
-
 # Therefore, we need some way to transport data quickly across
 # an image in a trainable fashion
-
 # Transport layers is one idea that I have. Another is a varaint of global
 # attention in RNN-based models.
-
-
 # Idea of the Translate Layer
 # Translate layers are an intermidiate between global attention, and local
 # cnn layers.
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.autograd import Variable
-
-import itertools
 
 class TranslateLayer(nn.Module):
-
     def __init__(self, ctrl_in_channels, cell_2_pow, stride=None, *args, **kwargs):
         super(TranslateLayer, self).__init__(*args, **kwargs)
         if stride is None:
@@ -51,7 +43,7 @@ class TranslateLayer(nn.Module):
 
     def forward(self, image_pipe, ctrl_pipe):
         # will not concat img and ctrl pipes, another layer can do that
-        assert(ctrl_pipe.size()[1] == self.in_channels)
+        assert (ctrl_pipe.size()[1] == self.in_channels)
         cell_sz = 2 ** self.cell_2_pow
 
         # build predictions
@@ -94,7 +86,8 @@ class TranslateLayer(nn.Module):
         img_flat = img_res_2.view(-1, *img_res_2.size()[-2:])
 
         b, c, n_h, n_w = conv_condense_out.size()
-        translate = conv_condense_out.view(b, 2, 8, n_h, 1, n_w, 1).expand(b, 2, 8, n_h, cell_sz, n_w, cell_sz)
+        translate = conv_condense_out.view(b, 2, 8, n_h, 1, n_w, 1).expand(b, 2, 8, n_h, cell_sz,
+                                                                           n_w, cell_sz)
         translate = translate.permute(0, 1, 3, 4, 5, 6, 2).clone()
         translate = translate.view(b * 2 * n_h * cell_sz * n_w * cell_sz, 8, 1)
 
@@ -105,8 +98,9 @@ class TranslateLayer(nn.Module):
         raw_res = torch.bmm(img_flat, final_translate)
 
         # final result I want bat x 6 x h x w
-        res_all = raw_res.view(b, 2, n_h* cell_sz, n_w * cell_sz, 3).permute(0, 1, 4, 2, 3).clone()
-        res_all = res_all.view(b, 6, n_h* cell_sz, n_w * cell_sz)
+        res_all = raw_res.view(b, 2, n_h * cell_sz, n_w * cell_sz, 3).permute(0, 1, 4, 2,
+                                                                              3).clone()
+        res_all = res_all.view(b, 6, n_h * cell_sz, n_w * cell_sz)
         res = res_all[:, :, :img_H, :img_W]
         return res
 
@@ -114,6 +108,7 @@ class TranslateLayer(nn.Module):
 class TrimLayer(nn.Module):
     def forward(self, img):
         return img[:, :, :-1, :-1]
+
 
 class TranslateModel(nn.Module):
     def __init__(self):
@@ -155,7 +150,6 @@ class TranslateModel(nn.Module):
             nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
             # nn.BatchNorm2d(1024),
             nn.ReLU(inplace=True))  # 1024 x 4 x 4
-
 
         # self.ec3feature = conv_relu(128, 64)
         # self.ec4feature = conv_relu(256, 128)
@@ -203,14 +197,14 @@ class TranslateModel(nn.Module):
         )
 
         self.cd5 = nn.Sequential(
-                nn.Conv2d(1024 + 128, 1024, kernel_size=3, stride=1, padding=1),
-                # nn.BatchNorm2d(1024),
-                nn.ReLU(inplace=True),
-                nn.ConvTranspose2d(1024, 1024, kernel_size=4, stride=2, padding=1, dilation=2),
-                TrimLayer(),   # needed for the 7x7 matrix.
-                # nn.BatchNorm2d(1024),
-                nn.ReLU(inplace=True),
-            )
+            nn.Conv2d(1024 + 128, 1024, kernel_size=3, stride=1, padding=1),
+            # nn.BatchNorm2d(1024),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(1024, 1024, kernel_size=4, stride=2, padding=1, dilation=2),
+            TrimLayer(),  # needed for the 7x7 matrix.
+            # nn.BatchNorm2d(1024),
+            nn.ReLU(inplace=True),
+        )
 
         def conv_transpose_conv(input_dim, output_dim):
             return nn.Sequential(
@@ -218,7 +212,8 @@ class TranslateModel(nn.Module):
                 # nn.BatchNorm2d(output_dim),
                 nn.ReLU(inplace=True),
                 nn.Dropout2d(p=drop_prob),
-                nn.ConvTranspose2d(output_dim, output_dim, kernel_size=4, stride=2, padding=1, dilation=2),
+                nn.ConvTranspose2d(output_dim, output_dim, kernel_size=4, stride=2, padding=1,
+                                   dilation=2),
                 # nn.BatchNorm2d(output_dim),
                 nn.ReLU(inplace=True),
             )
@@ -249,14 +244,11 @@ class TranslateModel(nn.Module):
             nn.Sigmoid()
         )  # The other mask is just 1- mask
 
-
-
     def forward(self, im):
-
         # ec: Encode features (condensing of shape)
         # cd: Decode of features (uncondensing)
 
-        #concat = torch.cat((im1, im2), dim=1)
+        # concat = torch.cat((im1, im2), dim=1)
         ec2 = self.ec2(im)
         ec3 = self.ec3(ec2)
         ec4 = self.ec4(ec3)
@@ -304,6 +296,4 @@ class TranslateModel(nn.Module):
         res = im0 * m1_e + im1 * (1 - m1_e)
 
         # match the interface of the encode_decode layer
-        return res, 0, 0,  M1, (1 - M1), im0, im1,
-
-
+        return res, 0, 0, M1, (1 - M1), im0, im1,

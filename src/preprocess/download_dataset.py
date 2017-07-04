@@ -1,18 +1,18 @@
 from __future__ import print_function
 
+import glob
+import logging
 import os
 import shutil
-from urllib.request import urlretrieve
 import zipfile
-from multiprocessing import pool, Semaphore
-import logging
-import glob
-import itertools
+from multiprocessing import pool
+from urllib.request import urlretrieve
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d %I:%M:%S', level=logging.INFO)
 
 dst = "J:/kitti/dataset"
 src = "http://kitti.is.tue.mpg.de/kitti/raw_data/"
+
 
 def download_data():
     os.makedirs(dst + "/zips", exist_ok=True)  # yeah, shouldn't be using this...
@@ -44,7 +44,7 @@ def download_file(file):
 
         os.makedirs(out_folder, exist_ok=True)  # yeah, shouldn't be using this...
 
-        if os.path.exists(out_folder+ "/finished.txt"): return
+        if os.path.exists(out_folder + "/finished.txt"): return
 
         zip_dest = "./{}/extract".format(out_folder)
         try:
@@ -239,8 +239,6 @@ files = """
 2011_10_03_drive_0047
 2011_10_03_drive_0058
 """
-
-
 
 if __name__ == '__main__':
     download_data()

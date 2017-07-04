@@ -1,14 +1,11 @@
 from __future__ import division, print_function
 
+import logging
 import os
 import random
+from multiprocessing import pool
 
-import numpy as np
 from scipy.misc import imread, imsave, imresize
-from multiprocessing import pool, Semaphore
-from contextlib import contextmanager
-import logging
-
 
 """
 Put folders inside of ./dataset/ to process
@@ -28,9 +25,10 @@ simple = False
 
 if simple:
     output_folder = output_folder + "/simple"
-    frame_interval = (1,2)
+    frame_interval = (1, 2)
 else:
     output_folder = output_folder + "/normal"
+
 
 def convert_folder_pics(folder_name):
     try:
@@ -81,7 +79,7 @@ def convert_folder_pics(folder_name):
 
         logging.error("Failure with {}\n".format(folder_name) + traceback.format_exc())
 
+
 if __name__ == '__main__':
     with pool.Pool(4) as p:
         p.map(convert_folder_pics, os.listdir(input_folder))
-
