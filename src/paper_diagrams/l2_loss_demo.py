@@ -18,6 +18,9 @@ def calculate_losses(coords):
     def l2_loss(sample, true):
         return np.mean((true - sample) **2)
 
+    def l1_loss(sample, true):
+        return np.mean(np.abs(true - sample))
+
     def texture_loss(true, sample, offset=1):
         o = offset
         delta_x_samp = sample[:, o:] - sample[:, :-o]
@@ -26,6 +29,13 @@ def calculate_losses(coords):
         delta_y_true = true[o:] - true[:-o]
         return l2_loss(delta_x_samp, delta_x_true) + l2_loss(delta_y_samp, delta_y_true)
 
+    def texture_loss2(true, sample, offset=1):
+        o = offset
+        delta_x_samp = np.abs(sample[:, o:] - sample[:, :-o])
+        delta_x_true = np.abs(true[:, o:] - true[:, :-o])
+        delta_y_samp = np.abs(sample[o:] - sample[:-o])
+        delta_y_true = np.abs(true[o:] - true[:-o])
+        return l1_loss(delta_x_samp, delta_x_true) + l1_loss(delta_y_samp, delta_y_true)
 
     def crop(img, loc, size):
         return img[loc[1]: loc[1] + size, loc[0]:loc[0] + size]
@@ -42,6 +52,9 @@ def calculate_losses(coords):
 
         texture_res = (texture_loss(orig, samp, i) for i in (1,2,4))
         print("Texture Loss: d=1: {}, d=2: {}, d=4: {}".format(*texture_res))
+
+        texture_res = (texture_loss2(orig, samp, i) for i in (1,2,4))
+        print("Texture Loss 2: d=1: {}, d=2: {}, d=4: {}".format(*texture_res))
 
     orig_crop = crop(full_img, coords, size)
     imsave("orig.png", magnify(orig_crop, 8))

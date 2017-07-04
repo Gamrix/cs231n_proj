@@ -17,7 +17,9 @@ from normalizer import normalize, denorm
 from encodedecode import EncodeDecode
 from viewmorphing import ViewMorphing
 from directgen import EncodeDecodeDirect
+from time import gmtime, strftime
 
+# Setup information
 NUM_TRAIN = 20000   # 16000
 NUM_VAL = 256
 NUM_SAVED_SAMPLES = 8
@@ -25,21 +27,20 @@ BATCH_SIZE = 8
 DATA_DIR = "preprocess/prep_res"
 PRINT_EVERY = 20
 
+# Default Model Hyperparams
 NUM_EPOCHS = 15
 DROPOUT = 0.15
 INIT_LR = 2e-4
 
+# Configuration Parameters
 is_local = False
-NAME="_Matt"
-
 overfit_small = False
-use_L2_loss = True
-is_azure= True
+use_L2_loss = False
+is_azure = True
+NAME = "Translate_Learn_Decay"
 
 if use_L2_loss:
-    NAME="_L2Loss"
-
-NAME="Translate_Learn_Decay"
+    NAME = "_L2Loss"
 
 if overfit_small:
     NUM_TRAIN = 64
@@ -47,14 +48,10 @@ if overfit_small:
     PRINT_EVERY = 1
     NAME +="_overfitting"
 
-from time import gmtime, strftime
-#NAME=strftime("%Y-%m-%d-%H:%M:%S", gmtime())
-dtype=torch.cuda.FloatTensor
-#dtype=torch.FloatTensor
-
-if os.path.exists("../john_local_flag.txt"):
+if os.path.exists("../john_local_flag.txt") or is_local:
     # this is because my local machine can't handle the batch size...
     is_local = True
+    is_azure = False
     BATCH_SIZE = 2
     NUM_EPOCHS = 1
     dtype = torch.FloatTensor
@@ -63,7 +60,14 @@ if os.path.exists("../john_local_flag.txt"):
     NUM_SAVED_SAMPLES = 2  # needs to be less than or equal to batch size according to Matt
     torch.set_default_tensor_type("torch.FloatTensor")
 else:
+    dtype=torch.cuda.FloatTensor
     torch.set_default_tensor_type("torch.cuda.FloatTensor")
+
+curtime = strftime("_%m%d_%H%M%S", gmtime())
+NAME = NAME + curtime
+results_folder = "../results/" + NAME
+os.makedirs(results_folder, exist_ok=True)
+
 
 class ChunkSampler(sampler.Sampler):
     """Samples elements sequentially from some offset. 
@@ -81,32 +85,33 @@ class ChunkSampler(sampler.Sampler):
     def __len__(self):
         return self.num_samples
 
+
 class RandomChunkSampler(ChunkSampler):
     def __iter__(self):
         iter_range = list(range(self.start, self.start + self.num_samples))
         random.shuffle(iter_range)
         return iter(iter_range)
 
+
 def load_dataset():
     ground_truths = []
     inputs = []
     length = len(os.listdir(DATA_DIR))
     if os.path.isfile('saved_in_data.npy') and os.path.isfile('saved_ground_truths.npy'):
-        print ("Reading cached numpy data in from file...")
+        print("Reading cached numpy data in from file...")
         inputs = np.load('saved_in_data.npy')
         ground_truths = np.load('saved_ground_truths.npy')
-        print (len(inputs))
+        print(len(inputs))
         return inputs, ground_truths
 
     for i, dir in enumerate(os.listdir(DATA_DIR)):
-        print ("\tOn dir %d of %d" % (i, length))
+        print("\tOn dir %d of %d" % (i, length))
         src_p = DATA_DIR + "/" + dir
         if not os.path.isdir(src_p):
             continue
         src_f = sorted(glob.glob(src_p + "/*.jpg"))
 
         if not all(os.path.exists(f) for f in src_f): continue
-
         assert (len(src_f) % 3 == 0)
 
         files = zip(*[iter(src_f)]*3)
@@ -123,9 +128,9 @@ def load_dataset():
     inputs, ground_truths = np.array(inputs), np.array(ground_truths)
 
     if is_azure:
-        print("not saving vars due to disk constraints")
+        print("Not saving vars due to disk constraints")
     else:
-        print ("Caching numpy data for next run...")
+        print("Caching numpy data for next run...")
         np.save('saved_in_data.npy', inputs)
         np.save('saved_ground_truths.npy', ground_truths)
 
@@ -180,8 +185,8 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             optimizer.step()
 
     os.makedirs("losses", exist_ok=True)
-    np.save('losses/losses'+NAME, np.array(losses))
-    np.save('losses/eval_losses'+NAME, np.array(eval_losses))
+    np.save(results_folder + 'losses'+NAME, np.array(losses))
+    np.save(results_folder +'losses/eval_losses'+NAME, np.array(eval_losses))
 
 def calculate_norm_loss(x_var, y_var, pred_y, loss_fn):
     baseline_img = (x_var[:, :3,] + x_var[:, 3:])/2
@@ -210,27 +215,29 @@ def evaluate(model, dev_data, loss_fn, save=False):
 
         scores, _, C, M1, M2, res_img1, res_img2 = model(x_var)
         if (t >= length-2 and save):
+            extra = results_folder + "extra/"
+            os.makedirs(extra, exist_ok=True)
             for i in range(NUM_SAVED_SAMPLES):
-                name = "./L2_eval/{}_{}_".format(t, i)
+                name = results_folder + "{}_{}_".format(t, i)
                 convert_and_save(name + "gen.png", scores[i])
                 convert_and_save(name + "gold.png", y_var[i])
                 try:
-                    convert_and_save(name + "resgen1.png", res_img1[i])
-                    convert_and_save(name + "resgen2.png", res_img2[i])
+                    convert_and_save(extra + "resgen1.png", res_img1[i])
+                    convert_and_save(extra + "resgen2.png", res_img2[i])
                 except Exception:
                     print(traceback.format_exc())
 
                 # np.save(name + 'C', C.data.cpu().numpy())
                 try:
-                    np.save(name + 'M1', M1.data.cpu().numpy())
-                    np.save(name + 'M2', M2.data.cpu().numpy())
+                    np.save(extra + 'M1', M1.data.cpu().numpy())
+                    np.save(extra + 'M2', M2.data.cpu().numpy())
                 except Exception:
                     print(traceback.format_exc())
                 # convert_and_save(name + "__Cx.png", )
                 x_res = x_copy[i]
                 try:
-                    imsave(name + "orig_0.png", x_res[:,:,:3])
-                    imsave(name + "orig_1.png", x_res[:,:,3:])
+                    imsave(extra + "orig_0.png", x_res[:,:,:3])
+                    imsave(extra + "orig_1.png", x_res[:,:,3:])
                 except Exception:
                     print(traceback.format_exc())
 
@@ -295,14 +302,12 @@ def run_model(train_data, val_data, test_data):
     loss_fn = TextureLoss()
     if use_L2_loss:
         loss_fn = L2Loss()
-    #optimizer = torch.optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9) 
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
     
     train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS)
 
     try:
-        os.makedirs("models", exist_ok=True)
-        torch.save(model, 'models/model'+NAME+'.dat')
+        torch.save(model, results_folder + 'model'+NAME+'.dat')
     except Exception:
         print(traceback.format_exc())
 
@@ -327,8 +332,7 @@ if __name__ == "__main__":
     import logging
     logging.basicConfig(format='%(asctime)s    %(message)s', datefmt='%H:%M:%S', level=logging.INFO)
 
-    curtime = strftime("_%m%d_%H%M%S", gmtime())
-    file_handler = logging.FileHandler("logs/model_perf"+NAME + curtime+".log")
+    file_handler = logging.FileHandler(results_folder + "model_perf"+NAME + curtime+".log")
     file_handler.setFormatter(logging.Formatter(fmt='%(asctime)s    %(message)s', datefmt='%H:%M:%S'))
     logging.getLogger().addHandler(file_handler)
     print = logging.info
