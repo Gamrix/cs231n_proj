@@ -2,22 +2,21 @@ from __future__ import print_function, division
 
 import glob
 import os
-import numpy as np
 import random
-import traceback
-from scipy.misc import imread, imsave
+from time import gmtime, strftime
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import numpy as np
+from scipy.misc import imread, imsave
 from torch.autograd import Variable
 from torch.utils.data import DataLoader, TensorDataset, sampler
 
-from normalizer import normalize, denorm
+import loss_fns
 from encodedecode import EncodeDecode
+from normalizer import normalize, denorm
 from viewmorphing import ViewMorphing
-from directgen import EncodeDecodeDirect
-from time import gmtime, strftime
 
 # Setup information
 NUM_TRAIN = 20000   # 16000
@@ -65,7 +64,7 @@ else:
 
 curtime = strftime("_%m%d_%H%M%S", gmtime())
 NAME = NAME + curtime
-results_folder = "../results/" + NAME
+results_folder = "../../cs231n_results/" + NAME
 os.makedirs(results_folder, exist_ok=True)
 
 
@@ -168,9 +167,9 @@ def train(model, loss_fn, optimizer, train_data, val_data, num_epochs = 1):
             # print(t)
             x_var = Variable(normalize(x).permute(0,3,1,2)).type(dtype)
             y_var = Variable(normalize(y).permute(0,3,1,2)).type(dtype)
-            
+
             scores, oob_loss, _, _, _, _, _ = model(x_var)
-            
+
             loss = loss_fn(scores, y_var)
             if (t + 1) % PRINT_EVERY == 0:
                 norm_loss = calculate_norm_loss(x_var, y_var, scores, loss_fn)
@@ -205,7 +204,7 @@ def evaluate(model, dev_data, loss_fn, save=False):
     length = len(dev_data)
 
     # loss metrics
-    l2_loss_fn = L2Loss()
+    l2_loss_fn = loss_fns.L2Loss()
     all_loss = []
     l2_losses = []
     for t, (x, y) in enumerate(dev_data):
@@ -250,46 +249,9 @@ def evaluate(model, dev_data, loss_fn, save=False):
     return total_loss
 
 
-class L2Loss(torch.nn.Module):
-    def forward(self, y_pred, y_true):
-        diffsq = (y_pred - y_true) **2
-        return torch.mean(torch.sum(diffsq.view((-1, 224*224*3)), dim=1))
-
-class TextureLoss(torch.nn.Module):
-    """
-    Texture Loss is a L2 loss that also penalizes for deltas (textures) over various distances.
-    """
-    def __init__(self, texture_loss_weight=2):
-        self.texture_loss_weight = texture_loss_weight
-        super(TextureLoss, self).__init__()
-
-    def forward(self, y_pred, y_true):
-        loss = self.l2_loss(y_pred, y_true)
-        text_loss = 0
-        for i in range(3):
-            dist = 2 ** 3
-            text_loss += self.l2_loss(self.delta_x(y_pred, dist), self.delta_x(y_true, dist))
-            text_loss += self.l2_loss(self.delta_y(y_pred, dist), self.delta_y(y_true, dist))
-
-        return loss + self.texture_loss_weight * text_loss
-
-    @staticmethod
-    def delta_x(image, offset):
-        return image[:, :, :, :-offset] - image[:, :, :, offset:]
-
-    @staticmethod
-    def delta_y(image, offset):
-        return image[:, :, :-offset, :] - image[:, :, offset:, :]
-
-    @staticmethod
-    def l2_loss(y_pred, y_true):
-        N = y_pred.size()[0]
-        diffsq = (y_pred - y_true) **2
-        return torch.mean(torch.sum(diffsq.view((N, -1)), dim=1))
-
 def run_model(train_data, val_data, test_data):
     if False:
-        model = nn.Sequential (
+        model = nn.Sequential(
             EncodeDecode(),
             ViewMorphing()
         ).type(dtype)
@@ -298,13 +260,13 @@ def run_model(train_data, val_data, test_data):
         model = translatelayer.TranslateModel()
 
     #model = EncodeDecodeDirect().type(dtype)
-    
-    loss_fn = TextureLoss()
+
+    cur_loss_fn = loss_fns.TextureLoss2()
     if use_L2_loss:
-        loss_fn = L2Loss()
+        cur_loss_fn = loss_fns.L2Loss()
     optimizer = optim.Adam(model.parameters(), lr=INIT_LR)
-    
-    train(model, loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS)
+
+    train(model, cur_loss_fn, optimizer, train_data, val_data, num_epochs=NUM_EPOCHS)
 
     try:
         torch.save(model, results_folder + 'model'+NAME+'.dat')
@@ -313,9 +275,9 @@ def run_model(train_data, val_data, test_data):
 
     try:
         if overfit_small:
-            evaluate(model, train_data, loss_fn, save=True)
+            evaluate(model, train_data, cur_loss_fn, save=True)
         else:
-            evaluate(model, val_data, loss_fn, save=True)
+            evaluate(model, val_data, cur_loss_fn, save=True)
     except Exception:
         print(traceback.format_exc())
 

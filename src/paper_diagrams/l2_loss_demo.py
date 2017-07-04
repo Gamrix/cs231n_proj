@@ -10,42 +10,49 @@ photo_path = "0_9_gold.png"
 full_img = imread(photo_path).astype(np.float64)
 
 
+def texture_diff(sample, true, offset=1):
+    o = offset
+    delta_x_samp = sample[:, o:] - sample[:, :-o]
+    delta_x_true = true[:, o:] - true[:, :-o]
+    delta_y_samp = sample[o:] - sample[:-o]
+    delta_y_true = true[o:] - true[:-o]
+    delta = (delta_x_samp - delta_x_true)[:-o] + (delta_y_samp - delta_y_true)[:, :-o]
+    return np.maximum(np.minimum(delta * 5 + 122, 255), 0)
+
+def l2_loss(sample, true):
+    return np.mean((true - sample) **2)
+
+def l1_loss(sample, true):
+    return np.mean(np.abs(true - sample))
+
+def texture_loss(true, sample, offset=1):
+    o = offset
+    delta_x_samp = sample[:, o:] - sample[:, :-o]
+    delta_x_true = true[:, o:] - true[:, :-o]
+    delta_y_samp = sample[o:] - sample[:-o]
+    delta_y_true = true[o:] - true[:-o]
+    return l2_loss(delta_x_samp, delta_x_true) + l2_loss(delta_y_samp, delta_y_true)
+
+def texture_loss2(true, sample, offset=1):
+    o = offset
+    delta_x_samp = np.abs(sample[:, o:] - sample[:, :-o])
+    delta_x_true = np.abs(true[:, o:] - true[:, :-o])
+    delta_y_samp = np.abs(sample[o:] - sample[:-o])
+    delta_y_true = np.abs(true[o:] - true[:-o])
+    return l1_loss(delta_x_samp, delta_x_true) + l1_loss(delta_y_samp, delta_y_true)
+
+def crop(img, loc, size):
+    return img[loc[1]: loc[1] + size, loc[0]:loc[0] + size]
+
+def magnify(img, factor):
+    return np.repeat(np.repeat(img, factor, axis=0), factor, axis=1)
 
 def calculate_losses(coords):
     size = 32
 
-
-    def l2_loss(sample, true):
-        return np.mean((true - sample) **2)
-
-    def l1_loss(sample, true):
-        return np.mean(np.abs(true - sample))
-
-    def texture_loss(true, sample, offset=1):
-        o = offset
-        delta_x_samp = sample[:, o:] - sample[:, :-o]
-        delta_x_true = true[:, o:] - true[:, :-o]
-        delta_y_samp = sample[o:] - sample[:-o]
-        delta_y_true = true[o:] - true[:-o]
-        return l2_loss(delta_x_samp, delta_x_true) + l2_loss(delta_y_samp, delta_y_true)
-
-    def texture_loss2(true, sample, offset=1):
-        o = offset
-        delta_x_samp = np.abs(sample[:, o:] - sample[:, :-o])
-        delta_x_true = np.abs(true[:, o:] - true[:, :-o])
-        delta_y_samp = np.abs(sample[o:] - sample[:-o])
-        delta_y_true = np.abs(true[o:] - true[:-o])
-        return l1_loss(delta_x_samp, delta_x_true) + l1_loss(delta_y_samp, delta_y_true)
-
-    def crop(img, loc, size):
-        return img[loc[1]: loc[1] + size, loc[0]:loc[0] + size]
-
-    def magnify(img, factor):
-        return np.repeat(np.repeat(img, factor, axis=0), factor, axis=1)
-
-
     def print_metrics(orig, samp, description):
-        imsave(description + ".png", magnify(flat_pic, 8))
+        imsave(description + ".png", magnify(samp, 8))
+        imsave(description + "_texture.png", magnify(texture_diff(samp, orig), 8))
         print()
         print(description)
         print("L2 Loss: ", l2_loss(orig, samp))
@@ -63,6 +70,7 @@ def calculate_losses(coords):
     flat_pic = magnify(average, 32)
     print_metrics(orig_crop, flat_pic, "average")
 
+    print_metrics(orig_crop, orig_crop + 1, "slight color change")
 
     shifted = crop(full_img, coords + [0, 2], size)
     print_metrics(orig_crop, shifted, "shifted_2px")
